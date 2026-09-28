@@ -5,6 +5,7 @@
   author: "André Miede",
   student-id: "081542",
   degree: "Bachelor of Science (B. Sc.)",
+  degree-line: auto,
   supervisor: "Prof. Dr.-Ing. Michael von Rüden",
   second-supervisor: "Prof. Dr. Martin Stiemerling",
   faculty: "Fachbereich Informatik",

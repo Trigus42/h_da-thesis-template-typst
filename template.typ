@@ -106,8 +106,10 @@
       #text(size: 17pt, weight: "bold", data.title)
       #if data.subtitle != none and data.subtitle != "" [#v(3mm)#text(size: 13pt, style: "italic", data.subtitle)]
       #v(1fr)
-      #text(size: 14pt, words.at(lang).degree-line)
-      #v(1mm)
+      #if data.degree-line != none [
+        #text(size: 14pt, data.degree-line)
+        #v(1mm)
+      ]
       #text(size: 14pt, data.degree)
       #v(1fr)
       #text(size: 14pt, words.at(lang).submitted)
@@ -395,6 +397,7 @@
   author: "Author Name",
   student-id: none,
   degree: "Bachelor of Science (B. Sc.)",
+  degree-line: none,
   supervisor: "First supervisor",
   second-supervisor: none,
   faculty: "Fachbereich Informatik",
@@ -424,13 +427,20 @@
   ) {
     assert(value == none or type(value) == str, message: name + " must be a string or none")
   }
+  assert(
+    degree-line == auto or degree-line == none or type(degree-line) == str,
+    message: "degree-line must be auto, none, or a string",
+  )
   let lang = language
+  // auto keeps the language default line; none omits it; a string overrides it.
+  let resolved-degree-line = if degree-line == auto { words.at(lang).degree-line } else { degree-line }
   let data = (
     title: title,
     subtitle: subtitle,
     author: author,
     student-id: student-id,
     degree: degree,
+    degree-line: resolved-degree-line,
     supervisor: supervisor,
     second-supervisor: second-supervisor,
     faculty: faculty,

@@ -25,6 +25,8 @@ Each front- and back-matter section owns its own title and layout in its file un
 
 To reorder or omit a section, move or comment out its `#include` in `thesis.typ`. The acronym list only shows acronyms actually referenced through `#acronym(...)`; referencing an undefined acronym is a compile error.
 
+The line above the degree on the title page is omitted unless you set `degree-line` in `thesis.with(...)`. Pass `degree-line: auto` for the language default, or a string to set custom wording; omitting the parameter (like `second-supervisor`) leaves the line out.
+
 `template.typ` provides the reusable pieces: `thesis` (metadata, page layout, German/English labels for the outlines and automatic labels), `mainmatter` (starts body pagination and running headers), `outlines` (contents and float lists), `part`, `appendix`, `unnumbered-heading`, `thesis-info`, `acronym`/`acronyms-used`, `definition-list`, `margin-note`, `theorem`/`proof`, and `thesis-table`/`thesis-listing` for captioned tables and source listings (both forward native `figure` options such as `placement` and `outlined`).
 
 Start appendices with `#appendix()`. It resets chapter numbering and switches heading, outline, and float labels to alphabetic chapter prefixes.
