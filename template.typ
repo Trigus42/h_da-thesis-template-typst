@@ -5,7 +5,6 @@
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
 #let appendix-mode = state("hda-thesis.appendix-mode", false)
 #let thesis-language = state("hda-thesis.language", "de")
-#let running-heading = state("hda-thesis.running-heading", none)
 
 #let words = (
   de: (
@@ -196,72 +195,60 @@
   block(width: 27mm, text(size: 7.8pt, style: "italic", fill: rgb("555555"), body)),
 )
 
-#let chapter-numbering(..numbers) = context {
-  format-chapter-number(appendix-mode.get(), ..numbers)
-}
-
 #let format-chapter-number(in-appendix, ..numbers) = numbering(
   if in-appendix { "A.1" } else { "1.1" },
   ..numbers,
 )
 
+#let chapter-numbering(..numbers) = context {
+  format-chapter-number(appendix-mode.get(), ..numbers)
+}
+
 #let heading-number-at(location) = {
   let numbers = counter(heading).at(location)
-  format-chapter-number(appendix-mode.at(location), ..numbers)
+  let in-appendix = appendix-mode.at(location)
+  format-chapter-number(in-appendix, ..numbers)
 }
 
-#let chapter-scoped-numbering(number) = context {
-  let chapter = counter(heading).get().first()
+#let float-number(target, location) = {
+  let chapter = counter(heading).at(location).first()
+  let in-appendix = appendix-mode.at(location)
+  let floats-in-chapter = query(target.before(location)).filter(it => (
+    counter(heading).at(it.location()).first() == chapter
+      and appendix-mode.at(it.location()) == in-appendix
+  ))
+  let sequence = floats-in-chapter.len()
   if chapter == 0 {
-    numbering("1", number)
+    numbering("1", sequence)
   } else {
-    format-chapter-number(appendix-mode.get(), chapter, number)
+    format-chapter-number(in-appendix, chapter, sequence)
   }
 }
-
-#let reset-float-counters() = {
-  counter(figure.where(kind: image)).update(0)
-  counter(figure.where(kind: table)).update(0)
-  counter(figure.where(kind: "listing")).update(0)
-}
-
-#let format-float-number(chapter, number, in-appendix) = {
-  if chapter == 0 {
-    numbering("1", number)
-  } else {
-    format-chapter-number(in-appendix, chapter, number)
-  }
-}
-
-#let float-number-at(target, location) = format-float-number(
-  counter(heading).at(location).first(),
-  counter(target).at(location).first(),
-  appendix-mode.at(location),
-)
 
 #let figure-reference(reference) = context {
   let target = reference.element
-  if target != none and target.func() == figure {
+  if target != none and target.func() == figure and reference.supplement == auto {
     let location = target.location()
-    let chapter = counter(heading).at(location).first()
-    let number = target.counter.at(location).first()
-    link(location)[#target.supplement #format-float-number(chapter, number, appendix-mode.at(location))]
+    let selector = figure.where(kind: target.kind)
+    link(location)[#target.supplement #float-number(selector, location)]
   } else {
     reference
   }
 }
 
-// Native outlines evaluate numbering in the outline's context. Render entries at
-// their source locations so appendix and chapter-scoped labels stay correct.
 #let float-outline(target) = {
   for figure-element in query(target.and(figure.where(outlined: true))) {
-    let location = figure-element.location()
-    link(location)[
-      #figure-element.supplement #float-number-at(target, location) #h(1em) #figure-element.caption.body
-      #box(width: 1fr, repeat[.])
-      #context counter(page).display(at: location)
-    ]
-    parbreak()
+    if figure-element.caption != none {
+      let location = figure-element.location()
+      let number = float-number(target, location)
+      let caption = figure-element.caption.body
+      link(location)[
+        #figure-element.supplement #number #h(1em) #caption
+        #box(width: 1fr, repeat[.])
+        #context counter(page).display(at: location)
+      ]
+      parbreak()
+    }
   }
 }
 
@@ -282,27 +269,33 @@
   }
 }
 
-#let thesis-table(body, caption: none, supplement: auto, ..options) = figure(
-  body,
-  kind: table,
-  supplement: supplement,
-  caption: caption,
-  ..options,
-)
+#let thesis-table(body, caption: none, supplement: auto, ..options) = context {
+  let resolved-supplement = if supplement == auto { words.at(thesis-language.get()).table } else { supplement }
+  figure(
+    body,
+    kind: table,
+    supplement: resolved-supplement,
+    caption: caption,
+    ..options,
+  )
+}
 
-#let thesis-listing(body, caption: none, supplement: auto, ..options) = context figure(
-  kind: "listing",
-  caption: caption,
-  supplement: if supplement == auto { words.at(thesis-language.get()).listing } else { supplement },
-  block(width: 100%)[
-    #line(length: 100%, stroke: 0.45pt)
-    #v(4pt)
-    #body
-    #v(4pt)
-    #line(length: 100%, stroke: 0.45pt)
-  ],
-  ..options,
-)
+#let thesis-listing(body, caption: none, supplement: auto, ..options) = context {
+  let resolved-supplement = if supplement == auto { words.at(thesis-language.get()).listing } else { supplement }
+  figure(
+    kind: "listing",
+    caption: caption,
+    supplement: resolved-supplement,
+    block(width: 100%)[
+      #line(length: 100%, stroke: 0.45pt)
+      #v(4pt)
+      #body
+      #v(4pt)
+      #line(length: 100%, stroke: 0.45pt)
+    ],
+    ..options,
+  )
+}
 
 #let theorem(title: none, body) = context block(above: 1em, below: 1em)[
   #strong[#words.at(thesis-language.get()).theorem#if title != none [ (#title)].] #body
@@ -378,7 +371,6 @@
   set document(title: title, author: (author,))
   thesis-language.update(lang)
   appendix-mode.update(false)
-  running-heading.update(none)
   part-counter.update(0)
   set page(
     paper: "a4",
@@ -394,10 +386,10 @@
   set list(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set enum(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set math.equation(numbering: "(1)")
-  show figure.where(kind: image): set figure(numbering: chapter-scoped-numbering)
-  show figure.where(kind: raw): set figure(numbering: chapter-scoped-numbering)
-  show figure.where(kind: table): set figure(numbering: chapter-scoped-numbering)
-  show figure.where(kind: "listing"): set figure(numbering: chapter-scoped-numbering)
+  set figure(numbering: "1")
+  show figure.where(kind: image): set figure(numbering: _ => context float-number(figure.where(kind: image), here()))
+  show figure.where(kind: table): set figure(numbering: _ => context float-number(figure.where(kind: table), here()))
+  show figure.where(kind: "listing"): set figure(numbering: _ => context float-number(figure.where(kind: "listing"), here()))
   set table(stroke: none)
 
   show link: set text(fill: royalblue)
@@ -405,10 +397,6 @@
   show raw: set text(font: mono-font, size: 8.5pt)
   show figure.caption: it => block(above: 5pt, text(size: 9pt, it))
   show heading.where(level: 1): it => {
-    if it.numbering != none {
-      reset-float-counters()
-      running-heading.update(it.body)
-    }
     pagebreak(weak: true)
     v(0pt)
     block(height: 25mm, above: 0pt, below: 0.8em)[
@@ -447,10 +435,13 @@
   clear-page()
 
   let running-header = context {
-    let title = running-heading.get()
-    let opening = query(heading.where(level: 1).after(here())).any(h => h.location().page() == here().page())
-    if title != none and not opening {
-      align(if calc.odd(here().page()) { right } else { left }, tracked-small-caps(title, size: 8pt, fill: rgb("444444")))
+    let page-number = here().page()
+    let numbered-chapters = query(heading.where(level: 1).before(here())).filter(it => it.numbering != none)
+    let is-chapter-opening = query(heading.where(level: 1).after(here())).any(it => it.location().page() == page-number)
+    if numbered-chapters.len() > 0 and not is-chapter-opening {
+      let chapter-title = numbered-chapters.last().body
+      let alignment = if calc.odd(page-number) { right } else { left }
+      align(alignment, tracked-small-caps(chapter-title, size: 8pt, fill: rgb("444444")))
       v(2pt)
       line(length: 100%, stroke: 0.35pt + rgb("aaaaaa"))
     }
