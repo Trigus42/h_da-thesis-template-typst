@@ -13,13 +13,23 @@ The output is `thesis.pdf`. Use `mise run watch` while writing.
 
 ## Configure
 
-Edit the arguments to `thesis.with(...)` in `thesis.typ`. Content is split between `chapters/`, `frontmatter/`, `assets/`, and `bibliography.bib`. The declaration, abbreviations, and glossary live in their own files under `frontmatter/`.
+Set thesis metadata in `thesis.with(...)` at the top of `thesis.typ`; the body of `thesis.typ` then includes each section in reading order. Content is split between `chapters/` (the body) and `matter/` (front- and back-matter sections), plus `assets/` and `bibliography.bib`.
 
-The reusable API supports German and English labels, thesis metadata, optional subtitle, declaration, abstracts, contents and float lists, acronyms, glossary, bibliography, part pages, appendix numbering, margin notes, theorem/proof blocks, and ClassicThesis-style headings. Import `thesis-table` and `thesis-listing` for captioned tables and source listings; both forward native `figure` options such as `placement` and `outlined`.
+Each front- and back-matter section owns its own title and layout in its file under `matter/`, and `thesis.typ` decides whether it appears before or after the chapters. Edit each section where it is read:
+
+- `declaration.typ` renders its heading, body, and signature block; `#thesis-info(data => ...)` supplies the author, location, and date.
+- `abstract-en.typ` and `abstract-de.typ` set their own language and heading.
+- `abbreviations.typ` defines the acronyms and prints the ones referenced with `#acronym("API")`.
+- `glossary.typ` defines and prints the glossary.
+- `bibliography.typ` prints the bibliography from `bibliography.bib`.
+
+To reorder or omit a section, move or comment out its `#include` in `thesis.typ`. The acronym list only shows acronyms actually referenced through `#acronym(...)`; referencing an undefined acronym is a compile error.
+
+`template.typ` provides the reusable pieces: `thesis` (metadata, page layout, German/English labels for the outlines and automatic labels), `mainmatter` (starts body pagination and running headers), `outlines` (contents and float lists), `part`, `appendix`, `unnumbered-heading`, `thesis-info`, `acronym`/`acronyms-used`, `definition-list`, `margin-note`, `theorem`/`proof`, and `thesis-table`/`thesis-listing` for captioned tables and source listings (both forward native `figure` options such as `placement` and `outlined`).
 
 Start appendices with `#appendix()`. It resets chapter numbering and switches heading, outline, and float labels to alphabetic chapter prefixes.
 
-`acronyms` and `glossary` are arrays of two-item arrays, for example `(("API", "Application Programming Interface"),)`. Omit optional text with `none`; required metadata must be non-empty strings. Part pages and table, listing, theorem, and proof labels follow the thesis language automatically.
+Acronym and glossary definitions are arrays of two-item arrays, for example `(("API", "Application Programming Interface"),)`. Optional metadata may be `none`; required metadata must be non-empty strings. Part pages and table, listing, theorem, and proof labels follow the thesis language automatically.
 
 ## Visual Review
 

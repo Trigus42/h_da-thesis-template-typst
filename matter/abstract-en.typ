@@ -1,3 +1,8 @@
+#import "../template.typ": unnumbered-heading
+
+#set text(lang: "en")
+#unnumbered-heading("Abstract")
+
 A short summary of the contents in English of about one page. The following points should be addressed in particular:
 
 - *Motivation:* Why did this work come about? Why is the topic of the work interesting to the general public?

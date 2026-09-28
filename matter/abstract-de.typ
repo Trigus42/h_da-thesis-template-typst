@@ -1,3 +1,8 @@
+#import "../template.typ": unnumbered-heading
+
+#set text(lang: "de")
+#unnumbered-heading("Zusammenfassung")
+
 Kurze Zusammenfassung des Inhaltes in deutscher Sprache von etwa einer Seite Länge. Dabei sollte vor allem auf die folgenden Punkte eingegangen werden:
 
 - *Motivation:* Wieso ist diese Arbeit entstanden? Warum ist das Thema der Arbeit für die Allgemeinheit interessant?

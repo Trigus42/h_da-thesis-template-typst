@@ -1,8 +1,4 @@
-#import "template.typ": thesis, mainmatter, declaration, abstract
-#import "template.typ": outlines, print-acronyms, print-glossary, print-bibliography
-#import "template.typ": part, appendix
-#import "frontmatter/abbreviations.typ": abbreviations
-#import "frontmatter/glossary.typ": glossary
+#import "template.typ": thesis, mainmatter, outlines, part, appendix
 
 #show: thesis.with(
   title: "A Classic Thesis Style",
@@ -18,11 +14,11 @@
   language: "de",
 )
 
-#declaration(include "frontmatter/declaration.typ")
-#abstract("Abstract", "en", include "frontmatter/abstract-en.typ")
-#abstract("Zusammenfassung", "de", include "frontmatter/abstract-de.typ")
+#include "matter/declaration.typ"
+#include "matter/abstract-en.typ"
+#include "matter/abstract-de.typ"
 #outlines()
-#print-acronyms(abbreviations)
+#include "matter/abbreviations.typ"
 
 #mainmatter()
 
@@ -35,5 +31,5 @@
 #appendix()
 #include "chapters/appendix.typ"
 
-#print-glossary(glossary)
-#print-bibliography("bibliography.bib")
+#include "matter/glossary.typ"
+#include "matter/bibliography.typ"

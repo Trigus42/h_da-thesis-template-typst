@@ -13,7 +13,7 @@ The original bundle is designed around freely available fonts and deliberate typ
 == Organization
 
 - `chapters/` contains the thesis content.
-- `frontmatter/` contains abstracts and related material.
+- `matter/` contains the front- and back-matter sections: declaration, abstracts, abbreviations, glossary, and bibliography.
 - `assets/` contains images and figures.
 - `bibliography.bib` stores references.
 - `template.typ` implements typography and page composition.

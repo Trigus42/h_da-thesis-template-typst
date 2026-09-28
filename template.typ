@@ -18,14 +18,10 @@
     student-id: "Matrikelnummer",
     first: "Referent",
     second: "Korreferent",
-    declaration: "Erklärung",
     contents: "Inhaltsverzeichnis",
     figures: "Abbildungsverzeichnis",
     tables: "Tabellenverzeichnis",
     listings: "Listings",
-    acronyms: "Abkürzungsverzeichnis",
-    glossary: "Glossar",
-    bibliography: "Literatur",
     part: "Teil",
     table: "Tabelle",
     listing: "Listing",
@@ -38,14 +34,10 @@
     student-id: "Student ID",
     first: "Supervisor",
     second: "Second supervisor",
-    declaration: "Declaration",
     contents: "Contents",
     figures: "List of Figures",
     tables: "List of Tables",
     listings: "List of Listings",
-    acronyms: "List of Acronyms",
-    glossary: "Glossary",
-    bibliography: "Bibliography",
     part: "Part",
     table: "Table",
     listing: "Listing",
@@ -81,10 +73,20 @@
 
 #let clear-page() = pagebreak(weak: true)
 
-#let unnumbered-page(title, body) = {
+// Start an unnumbered, unlisted top-level section on a fresh page. Content
+// files (declaration, abstracts, glossary, bibliography, ...) call this to open
+// their own section, so section titles live with the content rather than here.
+#let unnumbered-heading(title) = {
   clear-page()
   heading(level: 1, numbering: none, outlined: false, title)
-  body
+}
+
+// Run `render` with the thesis metadata (author, location, date, ...) so content
+// files can render document-specific details such as the declaration signature.
+#let thesis-info(render) = context {
+  let data = thesis-data.get()
+  assert(data != none, message: "thesis-info is only available inside a thesis document")
+  render(data)
 }
 
 #let title-page(data, lang) = {
@@ -139,24 +141,6 @@
     #data.author: #emph(data.title)#if data.subtitle != none and data.subtitle != "" [, #data.subtitle], \© #data.date
   ]
   pagebreak()
-}
-
-#let declaration(body) = context {
-  let data = thesis-data.get()
-  let lang = thesis-language.get()
-  assert(data != none, message: "declaration must be used inside thesis")
-  heading(level: 1, numbering: none, outlined: false, words.at(lang).declaration)
-  body
-  v(2em)
-  emph[#data.location, #data.date]
-  v(10mm)
-  align(right, block(width: 53mm)[#line(length: 100%) #align(center, data.author)])
-  clear-page()
-}
-
-#let abstract(title, lang, body) = {
-  assert(lang in ("de", "en"), message: "abstract language must be either \"de\" or \"en\"")
-  unnumbered-page(title, { set text(lang: lang); body })
 }
 
 #let acronym(short) = context {
@@ -288,19 +272,24 @@
   }
 }
 
-#let print-acronyms(acronyms) = context {
+// Render the list of acronyms actually referenced through `acronym(...)`. The
+// referenced set is only complete once the whole document is processed, so it is
+// read with `.final()`; the caller supplies both the section title and the
+// acronym definitions.
+#let acronyms-used(title, acronyms) = context {
   assert(type(acronyms) == array, message: "acronyms must be an array of two-item arrays")
   for entry in acronyms {
     assert(type(entry) == array and entry.len() == 2, message: "each acronym entry must be a two-item array")
   }
-  let unknown = used-acronyms.get().filter(short => not acronyms.any(it => it.at(0) == short))
+  let used = used-acronyms.final()
+  let unknown = used.filter(short => not acronyms.any(it => it.at(0) == short))
   assert(unknown.len() == 0, message: "unknown acronym: " + unknown.join(", "))
-  if used-acronyms.get().len() > 0 {
-    heading(level: 1, numbering: none, outlined: false, words.at(thesis-language.get()).acronyms)
+  if used.len() > 0 {
+    unnumbered-heading(title)
     table(
       columns: (35mm, 1fr),
       inset: (x: 0pt, y: 4pt),
-      ..acronyms.filter(x => used-acronyms.get().contains(x.at(0))).map(x => (
+      ..acronyms.filter(x => used.contains(x.at(0))).map(x => (
         box(tracked-small-caps(x.at(0))),
         x.at(1),
       )).flatten(),
@@ -309,14 +298,15 @@
   }
 }
 
-#let print-glossary(glossary) = context {
-  assert(type(glossary) == array, message: "glossary must be an array of two-item arrays")
-  for entry in glossary {
-    assert(type(entry) == array and entry.len() == 2, message: "each glossary entry must be a two-item array")
+// Render a two-column term/definition list under an unnumbered section heading.
+#let definition-list(title, entries) = {
+  assert(type(entries) == array, message: "definition list entries must be an array of two-item arrays")
+  for entry in entries {
+    assert(type(entry) == array and entry.len() == 2, message: "each entry must be a two-item array")
   }
-  if glossary.len() > 0 {
-    heading(level: 1, numbering: none, outlined: false, words.at(thesis-language.get()).glossary)
-    for entry in glossary {
+  if entries.len() > 0 {
+    unnumbered-heading(title)
+    for entry in entries {
       grid(
         columns: (43mm, 1fr),
         column-gutter: 2mm,
@@ -327,11 +317,6 @@
     }
     clear-page()
   }
-}
-
-#let print-bibliography(file) = context {
-  heading(level: 1, numbering: none, outlined: false, words.at(thesis-language.get()).bibliography)
-  bibliography(file, title: none, style: "ieee")
 }
 
 #let heading-outline(depth: 3) = {
