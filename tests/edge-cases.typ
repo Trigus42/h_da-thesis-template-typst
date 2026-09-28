@@ -1,5 +1,5 @@
 #import "../template.typ": thesis, mainmatter, outlines, appendix, part, thesis-listing, thesis-table
-#import "../template.typ": acronym, acronyms-used
+#import "../template.typ": acronym, acronyms-used, glossary-used
 #import "../template.typ": float-number, heading-number-at, part-entry
 #import "@preview/glossarium:0.5.10": make-glossary, register-glossary
 #import "@preview/ctheorems:2.0.0": thm-rules
@@ -21,6 +21,8 @@
 #show: thm-rules.with(qed-symbol: sym.square.stroked)
 
 #outlines()
+#acronyms-used("Empty Abbreviations", ())
+#glossary-used("Empty Glossary", ())
 #acronyms-used("Abbreviations", abbreviations)
 #mainmatter()
 

@@ -326,42 +326,46 @@
 // Glossarium owns acronym tracking, first-use expansion, and links. This wrapper
 // only adapts its output to the thesis's two-column abbreviation list.
 #let acronyms-used(title, acronyms) = {
-  unnumbered-heading(title)
-  print-glossary(
-    acronyms,
-    user-print-gloss: (entry, ..args) => context {
-      let first-use = get-entry-back-references(entry).first().dest
-      grid(
-        columns: (35mm, 1fr),
-        column-gutter: 0pt,
-        row-gutter: 0pt,
-        inset: (x: 0pt, y: 4pt),
-        box(link(first-use, tracked-small-caps(entry.short))),
-        entry.long,
-      )
-    },
-  )
-  clear-page()
+  context if acronyms.any(entry => get-entry-back-references(entry).len() > 0) {
+    unnumbered-heading(title)
+    print-glossary(
+      acronyms,
+      user-print-gloss: (entry, ..args) => context {
+        let first-use = get-entry-back-references(entry).first().dest
+        grid(
+          columns: (35mm, 1fr),
+          column-gutter: 0pt,
+          row-gutter: 0pt,
+          inset: (x: 0pt, y: 4pt),
+          box(link(first-use, tracked-small-caps(entry.short))),
+          entry.long,
+        )
+      },
+    )
+    clear-page()
+  }
 }
 
 // Glossarium manages glossary entries and references; this wrapper only adapts
 // its entry renderer to the thesis's two-column glossary layout.
 #let glossary-used(title, entries) = {
-  unnumbered-heading(title)
-  print-glossary(
-    entries,
-    user-print-gloss: (entry, ..args) => context {
-      let first-use = get-entry-back-references(entry).first().dest
-      grid(
-        columns: (43mm, 1fr),
-        column-gutter: 2mm,
-        row-gutter: 0.75em,
-        text(hyphenate: false, link(first-use, strong(entry.long))),
-        entry.description,
-      )
-    },
-  )
-  clear-page()
+  context if entries.any(entry => get-entry-back-references(entry).len() > 0) {
+    unnumbered-heading(title)
+    print-glossary(
+      entries,
+      user-print-gloss: (entry, ..args) => context {
+        let first-use = get-entry-back-references(entry).first().dest
+        grid(
+          columns: (43mm, 1fr),
+          column-gutter: 2mm,
+          row-gutter: 0.75em,
+          text(hyphenate: false, link(first-use, strong(entry.long))),
+          entry.description,
+        )
+      },
+    )
+    clear-page()
+  }
 }
 
 #let heading-outline(depth: 3) = {
