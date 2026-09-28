@@ -10,7 +10,6 @@
 #show: thesis.with(
   title: "Edge Cases",
   author: "Test Author",
-  degree: "Bachelor of Science",
   supervisor: "Test Supervisor",
   faculty: "Test Faculty",
   university: "Test University",

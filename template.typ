@@ -105,12 +105,14 @@
       #text(size: 17pt, weight: "bold", data.title)
       #if data.subtitle != none and data.subtitle != "" [#v(3mm)#text(size: 13pt, style: "italic", data.subtitle)]
       #v(1fr)
-      #if data.degree-line != none [
-        #text(size: 14pt, data.degree-line)
-        #v(1mm)
+      #if data.degree != none [
+        #if data.degree-line != none [
+          #text(size: 14pt, data.degree-line)
+          #v(1mm)
+        ]
+        #text(size: 14pt, data.degree)
+        #v(1fr)
       ]
-      #text(size: 14pt, data.degree)
-      #v(1fr)
       #text(size: 14pt, words.at(lang).submitted)
       #v(1mm)
       #text(size: 14pt, weight: "bold", data.author)
@@ -429,7 +431,7 @@
   subtitle: none,
   author: "Author Name",
   student-id: none,
-  degree: "Bachelor of Science (B. Sc.)",
+  degree: none,
   degree-line: none,
   supervisor: "First supervisor",
   second-supervisor: none,
@@ -444,7 +446,6 @@
   for (name, value) in (
     ("title", title),
     ("author", author),
-    ("degree", degree),
     ("supervisor", supervisor),
     ("faculty", faculty),
     ("university", university),
@@ -456,6 +457,7 @@
   for (name, value) in (
     ("subtitle", subtitle),
     ("student-id", student-id),
+    ("degree", degree),
     ("second-supervisor", second-supervisor),
   ) {
     assert(value == none or type(value) == str, message: name + " must be a string or none")
