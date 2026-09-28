@@ -107,7 +107,9 @@
       #v(3mm)
       #text(size: 14pt, weight: "bold", data.author)
       #v(3mm)
-      #text(size: 11pt)[#words.at(lang).student-id: #data.student-id]
+      #if data.student-id != none and data.student-id != "" [
+        #text(size: 11pt)[#words.at(lang).student-id: #data.student-id]
+      ]
       #v(1fr)
       #table(
         columns: (auto, 5mm, auto),
@@ -115,7 +117,11 @@
         stroke: none,
         inset: 1.5pt,
         [#words.at(lang).first], [:], [#data.supervisor],
-        [#words.at(lang).second], [:], [#data.second-supervisor],
+        ..if data.second-supervisor != none and data.second-supervisor != "" {
+          ([#words.at(lang).second], [:], [#data.second-supervisor])
+        } else {
+          ()
+        },
       )
     ]
   ]
@@ -182,29 +188,50 @@
   block(width: 27mm, text(size: 7.8pt, style: "italic", fill: rgb("555555"), body)),
 )
 
-#let float-label(kind) = context {
-  let chapter = counter(heading).get().first()
-  let sequence = counter(kind).get().first() + 1
-  if appendix-mode.get() {
+#let float-label(sequence, location: none) = context {
+  let chapter = if location == none {
+    counter(heading).get().first()
+  } else {
+    counter(heading).at(location).first()
+  }
+  let in-appendix = if location == none {
+    appendix-mode.get()
+  } else {
+    appendix-mode.at(location)
+  }
+  if in-appendix {
     numbering("A.1", chapter, sequence)
   } else {
     numbering("1.1", chapter, sequence)
   }
 }
 
-#let thesis-table(body, caption: none) = figure(
+#let float-outline(target) = {
+  for it in query(target) {
+    let location = it.location()
+    let sequence = counter(target).at(location).first()
+    link(location)[
+      #it.supplement #float-label(sequence, location: location) #h(1em) #it.caption.body
+      #box(width: 1fr, repeat[.])
+      #numbering("1", ..counter(page).at(location))
+    ]
+    parbreak()
+  }
+}
+
+#let thesis-table(body, caption: none, supplement: "Tabelle") = figure(
   body,
-  kind: "thesis-table",
-  supplement: "Tabelle",
-  numbering: _ => float-label("thesis-table"),
+  kind: table,
+  supplement: supplement,
+  numbering: n => float-label(n),
   caption: caption,
 )
 
-#let listing(body, caption: none) = figure(
+#let listing(body, caption: none, supplement: "Listing") = figure(
   kind: "listing",
-  numbering: _ => float-label("listing"),
+  numbering: n => float-label(n),
   caption: caption,
-  supplement: "Listing",
+  supplement: supplement,
   block(width: 100%)[
     #line(length: 100%, stroke: 0.45pt)
     #v(4pt)
@@ -226,10 +253,10 @@
   title: "Thesis Title",
   subtitle: none,
   author: "Author Name",
-  student-id: "000000",
+  student-id: none,
   degree: "Bachelor of Science (B. Sc.)",
   supervisor: "First supervisor",
-  second-supervisor: "Second supervisor",
+  second-supervisor: none,
   faculty: "Fachbereich Informatik",
   university: "Hochschule Darmstadt",
   location: "Darmstadt",
@@ -244,7 +271,11 @@
   show-outlines: true,
   body,
 ) = {
-  let lang = if language == "en" { "en" } else { "de" }
+  assert(language in ("de", "en"), message: "language must be either \"de\" or \"en\"")
+  assert(title != "", message: "title must not be empty")
+  assert(author != "", message: "author must not be empty")
+  assert(supervisor != "", message: "supervisor must not be empty")
+  let lang = language
   let data = (
     title: title,
     subtitle: subtitle,
@@ -274,10 +305,25 @@
   set list(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set enum(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set math.equation(numbering: "(1)")
-  set figure(numbering: n => context {
-    let chapter = counter(heading).get().first()
-    numbering("1.1", chapter, n)
-  })
+  show figure: set figure(numbering: "1.1")
+  show figure.where(kind: image): it => {
+    let sequence = counter(figure.where(kind: image)).at(it.location()).first()
+    let number = float-label(sequence, location: it.location())
+    set figure(numbering: _ => number)
+    it
+  }
+  show figure.where(kind: table): it => {
+    let sequence = counter(figure.where(kind: table)).at(it.location()).first()
+    let number = float-label(sequence, location: it.location())
+    set figure(numbering: _ => number)
+    it
+  }
+  show figure.where(kind: "listing"): it => {
+    let sequence = counter(figure.where(kind: "listing")).at(it.location()).first()
+    let number = float-label(sequence, location: it.location())
+    set figure(numbering: _ => number)
+    it
+  }
   set table(stroke: none)
 
   show link: set text(fill: royalblue)
@@ -292,7 +338,7 @@
           right + top,
           dx: 28mm,
           dy: -6mm,
-          context chapter-glyph(counter(heading).display()),
+          context chapter-glyph(numbering(it.numbering, ..counter(heading).at(it.location()))),
         )
       }
       #text(font: body-font, size: 12pt, fill: black, tracking: 0.085em, weight: "regular", upper(it.body))
@@ -301,24 +347,28 @@
     ]
   }
   show heading.where(level: 2): it => block(above: 1.4em, below: 0.9em)[
-    #smallcaps[#if it.numbering != none [#context counter(heading).display() #h(1em)]#it.body]
+    #smallcaps[#if it.numbering != none [#context numbering(it.numbering, ..counter(heading).at(it.location())) #h(1em)]#it.body]
   ]
   show heading.where(level: 3): it => block(above: 1.1em, below: 0.7em)[
-    #text(style: "italic")[#if it.numbering != none [#context counter(heading).display() #h(1em)]#it.body]
+    #text(style: "italic")[#if it.numbering != none [#context numbering(it.numbering, ..counter(heading).at(it.location())) #h(1em)]#it.body]
   ]
   show heading.where(level: 4): it => block(above: 1em, below: 0.6em)[
-    #text(style: "italic")[#if it.numbering != none [#context counter(heading).display() #h(1em)]#it.body]
+    #text(style: "italic")[#if it.numbering != none [#context numbering(it.numbering, ..counter(heading).at(it.location())) #h(1em)]#it.body]
   ]
 
   title-page(data, lang)
   title-back(data)
   if show-declaration { declaration(data, lang) }
-  if abstract-en != none { unnumbered-page("Abstract", abstract-en) }
-  if abstract-de != none { unnumbered-page("Zusammenfassung", abstract-de) }
+  if abstract-en != none {
+    unnumbered-page("Abstract", context { set text(lang: "en"); abstract-en })
+  }
+  if abstract-de != none {
+    unnumbered-page("Zusammenfassung", context { set text(lang: "de"); abstract-de })
+  }
   clear-page()
 
   set page(header: context {
-    let hs = query(heading.where(level: 1).before(here())).filter(h => h.numbering != none)
+    let hs = query(heading.where(level: 1).before(here()))
     let opening = query(heading.where(level: 1).after(here())).any(h => h.location().page() == here().page())
     if hs.len() > 0 and not opening {
       align(if calc.odd(here().page()) { right } else { left }, smallcaps(hs.last().body, size: 8pt, fill: rgb("444444")))
@@ -327,19 +377,25 @@
     }
   })
 
-  if show-outlines {
+  context if show-outlines {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).contents)
     outline(title: none, depth: 3, indent: auto)
     clear-page()
-    heading(level: 1, numbering: none, outlined: false, words.at(lang).figures)
-    outline(title: none, target: figure.where(kind: image))
-    clear-page()
-    heading(level: 1, numbering: none, outlined: false, words.at(lang).tables)
-    outline(title: none, target: figure.where(kind: table))
-    clear-page()
-    heading(level: 1, numbering: none, outlined: false, words.at(lang).listings)
-    outline(title: none, target: figure.where(kind: raw))
-    clear-page()
+    if query(figure.where(kind: image)).len() > 0 {
+      heading(level: 1, numbering: none, outlined: false, words.at(lang).figures)
+      float-outline(figure.where(kind: image))
+      clear-page()
+    }
+    if query(figure.where(kind: table)).len() > 0 {
+      heading(level: 1, numbering: none, outlined: false, words.at(lang).tables)
+      float-outline(figure.where(kind: table))
+      clear-page()
+    }
+    if query(figure.where(kind: "listing")).len() > 0 {
+      heading(level: 1, numbering: none, outlined: false, words.at(lang).listings)
+      float-outline(figure.where(kind: "listing"))
+      clear-page()
+    }
   }
   if acronyms.len() > 0 {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).acronyms)
@@ -352,7 +408,7 @@
   }
 
   counter(page).update(1)
-  set page(numbering: none)
+  set page(numbering: "1")
   body
 
   if glossary.len() > 0 {
