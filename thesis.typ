@@ -1,9 +1,12 @@
 #import "template.typ": thesis, mainmatter, outlines, part, appendix
 #import "@preview/glossarium:0.5.10": make-glossary, register-glossary
+#import "@preview/ctheorems:2.0.0": thm-rules
 #import "matter/abbreviations.typ": abbreviations, abbreviations-list
+#import "matter/glossary.typ": glossary, glossary-list
 
 #show: make-glossary
-#register-glossary(abbreviations)
+#show: thm-rules.with(qed-symbol: sym.square.stroked)
+#register-glossary(abbreviations + glossary)
 
 #show: thesis.with(
   title: "A Classic Thesis Style",
@@ -37,5 +40,5 @@
 #appendix()
 #include "chapters/appendix.typ"
 
-#include "matter/glossary.typ"
+#glossary-list()
 #include "matter/bibliography.typ"

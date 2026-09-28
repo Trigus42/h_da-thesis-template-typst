@@ -334,25 +334,24 @@
   clear-page()
 }
 
-// Render a two-column term/definition list under an unnumbered section heading.
-#let definition-list(title, entries) = {
-  assert(type(entries) == array, message: "definition list entries must be an array of two-item arrays")
-  for entry in entries {
-    assert(type(entry) == array and entry.len() == 2, message: "each entry must be a two-item array")
-  }
-  if entries.len() > 0 {
-    unnumbered-heading(title)
-    for entry in entries {
+// Glossarium manages glossary entries and references; this wrapper only adapts
+// its entry renderer to the thesis's two-column glossary layout.
+#let glossary-used(title, entries) = {
+  unnumbered-heading(title)
+  print-glossary(
+    entries,
+    user-print-gloss: (entry, ..args) => context {
+      let first-use = get-entry-back-references(entry).first().dest
       grid(
         columns: (43mm, 1fr),
         column-gutter: 2mm,
         row-gutter: 0.75em,
-        text(hyphenate: false, strong(entry.at(0))),
-        entry.at(1),
+        text(hyphenate: false, link(first-use, strong(entry.long))),
+        entry.description,
       )
-    }
-    clear-page()
-  }
+    },
+  )
+  clear-page()
 }
 
 #let heading-outline(depth: 3) = {
@@ -424,14 +423,6 @@
   ],
   ..options,
 )
-
-#let theorem(title: none, body) = context block(above: 1em, below: 1em)[
-  #strong[#words.at(thesis-language.get()).theorem#if title != none [ (#title)].] #body
-]
-
-#let proof(body) = context block(above: 0.7em, below: 0.9em)[
-  #strong[#words.at(thesis-language.get()).proof.] #body #h(1fr) #sym.square.stroked
-]
 
 #let thesis(
   title: "Thesis Title",

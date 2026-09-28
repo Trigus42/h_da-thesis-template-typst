@@ -1,11 +1,11 @@
-#import "../template.typ": definition-list
+#import "../template.typ": glossary-used
 
 #let glossary = (
-  ("Central Limit Theorem", "A theorem stating that sums of independent random variables tend toward a normal distribution."),
-  ("Normal Distribution", [A continuous bell-shaped probability distribution $N(mu, sigma^2)$.]),
-  ("i.i.d.", "Independent and identically distributed random variables."),
-  ("Variance", [A measure of dispersion, denoted $sigma^2$.]),
-  ("PMF", "Probability Mass Function."),
+  (key: "central-limit-theorem", long: "Central Limit Theorem", description: "A theorem stating that sums of independent random variables tend toward a normal distribution."),
+  (key: "normal-distribution", long: "Normal Distribution", description: [A continuous bell-shaped probability distribution $N(mu, sigma^2)$.]),
+  (key: "iid", long: "i.i.d.", description: "Independent and identically distributed random variables."),
+  (key: "variance", long: "Variance", description: [A measure of dispersion, denoted $sigma^2$.]),
+  (key: "pmf", long: "PMF", description: "Probability Mass Function."),
 )
 
-#definition-list("Glossary", glossary)
+#let glossary-list() = glossary-used("Glossary", glossary)

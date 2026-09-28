@@ -1,4 +1,7 @@
-#import "../template.typ": theorem, proof, thesis-listing, thesis-table
+#import "../template.typ": thesis-listing, thesis-table
+#import "@preview/glossarium:0.5.10": gls
+#import "@preview/ctheorems:2.0.0": thm-themes
+#import thm-themes.ams: theorem, proof
 
 = Ein weiteres Kapitel
 
@@ -73,10 +76,10 @@ $ P(K = k | l) = P(sum_(i=1)^(M-1) K_i = k | l). $ <pmf-equation>
 
 == Theorem and Proof
 
-#theorem(title: "Gaussian approximation")[Let the $b_i(j)$ be independent and identically distributed random variables with mean $mu$ and variance $sigma^2$. For large $k$ and $l$, @pmf-equation is approximately Gaussian.]
+#theorem[Gaussian approximation][Let the $b_i(j)$ be independent and identically distributed random variables with mean $mu$ and variance $sigma^2$. For large $k$ and $l$, @pmf-equation is approximately Gaussian.]
 
 #proof[For $M = 2$, expansion and normalization followed by the central limit theorem gives the result.]
 
 == Glossary
 
-The Central Limit Theorem, normal distribution, i.i.d. variables, variance, and probability mass functions are listed in the glossary.
+#gls("central-limit-theorem"), #gls("normal-distribution"), #gls("iid"), #gls("variance"), and #gls("pmf") are listed in the glossary.
