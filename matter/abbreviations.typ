@@ -1,4 +1,4 @@
-#import "../template.typ": acronyms-used
+#import "../template.typ": acronyms-used, translated
 
 // Reference an acronym in the text with `#acronym("api")`; Glossarium expands
 // the first use and includes only referenced entries below.
@@ -7,4 +7,4 @@
   (key: "uml", short: "UML", long: "Unified Modeling Language"),
 )
 
-#let abbreviations-list() = acronyms-used("Abkürzungsverzeichnis", abbreviations)
+#let abbreviations-list() = acronyms-used(translated("abbreviations"), abbreviations)

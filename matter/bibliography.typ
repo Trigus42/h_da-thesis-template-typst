@@ -1,4 +1,4 @@
-#import "../template.typ": unnumbered-heading
+#import "../template.typ": translated, unnumbered-heading
 
-#unnumbered-heading("Literatur")
+#unnumbered-heading(translated("bibliography"))
 #bibliography("../bibliography.bib", title: none, style: "ieee")

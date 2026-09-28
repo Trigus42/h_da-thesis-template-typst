@@ -26,6 +26,9 @@
     listing: "Listing",
     theorem: "Satz",
     proof: "Beweis",
+    abbreviations: "Abkürzungsverzeichnis",
+    glossary: "Glossar",
+    bibliography: "Literatur",
   ),
   en: (
     degree-line: "Thesis submitted in partial fulfillment of the requirements for the degree",
@@ -42,6 +45,9 @@
     listing: "Listing",
     theorem: "Theorem",
     proof: "Proof",
+    abbreviations: "List of Abbreviations",
+    glossary: "Glossary",
+    bibliography: "Bibliography",
   ),
 )
 
@@ -79,6 +85,8 @@
   clear-page()
   heading(level: 1, numbering: none, outlined: false, title)
 }
+
+#let translated(key) = context words.at(thesis-language.get()).at(key)
 
 // Run `render` with the thesis metadata (author, location, date, ...) so content
 // files can render document-specific details such as the declaration signature.

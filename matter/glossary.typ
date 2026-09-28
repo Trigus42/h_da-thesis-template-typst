@@ -1,4 +1,4 @@
-#import "../template.typ": glossary-used
+#import "../template.typ": glossary-used, translated
 
 #let glossary = (
   (key: "central-limit-theorem", long: "Central Limit Theorem", description: "A theorem stating that sums of independent random variables tend toward a normal distribution."),
@@ -8,4 +8,4 @@
   (key: "pmf", long: "PMF", description: "Probability Mass Function."),
 )
 
-#let glossary-list() = glossary-used("Glossary", glossary)
+#let glossary-list() = glossary-used(translated("glossary"), glossary)
