@@ -12,3 +12,7 @@ run = [
   "typst compile --diagnostic-format short thesis.typ thesis.pdf",
   "typst compile --root . --diagnostic-format short tests/edge-cases.typ /tmp/hda-thesis-edge-cases.pdf",
 ]
+
+[tasks.update-template]
+description = "Rebase onto the latest remote template"
+run = "git fetch https://github.com/Trigus42/h_da-thesis-template-typst.git main && git rebase --autostash FETCH_HEAD"

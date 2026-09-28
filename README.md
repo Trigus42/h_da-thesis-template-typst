@@ -11,6 +11,14 @@ mise run build
 
 The output is `thesis.pdf`. Use `mise run watch` while writing.
 
+To update a thesis repository with the latest template changes, run:
+
+```sh
+mise run update-template
+```
+
+This fetches the template's `main` branch directly from GitHub and rebases the current branch onto it. Uncommitted changes are temporarily stashed and restored automatically; resolve any conflicts before continuing.
+
 ## Configure
 
 Set thesis metadata in `thesis.with(...)` at the top of `thesis.typ`; the body of `thesis.typ` then includes each section in reading order. Content is split between `chapters/` (the body) and `matter/` (front- and back-matter sections), plus `assets/` and `bibliography.bib`.
