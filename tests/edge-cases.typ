@@ -14,12 +14,17 @@
   show-outlines: true,
 )
 
-#figure(rect(width: 20mm, height: 10mm), caption: [Before the first chapter])
+#figure(rect(width: 20mm, height: 10mm), caption: [Before the first chapter]) <preface-figure>
 
 = First Chapter
 
-#figure(rect(width: 20mm, height: 10mm), caption: [First chapter figure])
+#figure(rect(width: 20mm, height: 10mm), caption: [First chapter figure]) <first-figure>
 #figure(rect(width: 20mm, height: 10mm), caption: [Excluded from the outline], outlined: false)
+
+#figure(
+  table(columns: 2, [Raw], [Table]),
+  caption: [A raw table figure],
+) <raw-table>
 
 #thesis-table(
   table(columns: 2, [A], [B]),
@@ -41,4 +46,6 @@
 
 = Appendix Chapter
 
-#figure(rect(width: 20mm, height: 10mm), caption: [Appendix figure])
+#figure(rect(width: 20mm, height: 10mm), caption: [Appendix figure]) <appendix-figure>
+
+References: @preface-figure, @first-figure, @raw-table, and @appendix-figure.

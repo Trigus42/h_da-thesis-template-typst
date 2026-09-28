@@ -5,6 +5,7 @@
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
 #let appendix-mode = state("hda-thesis.appendix-mode", false)
 #let thesis-language = state("hda-thesis.language", "de")
+#let running-heading = state("hda-thesis.running-heading", none)
 
 #let words = (
   de: (
@@ -196,12 +197,17 @@
 )
 
 #let chapter-numbering(..numbers) = context {
-  numbering(if appendix-mode.get() { "A.1" } else { "1.1" }, ..numbers)
+  format-chapter-number(appendix-mode.get(), ..numbers)
 }
+
+#let format-chapter-number(in-appendix, ..numbers) = numbering(
+  if in-appendix { "A.1" } else { "1.1" },
+  ..numbers,
+)
 
 #let heading-number-at(location) = {
   let numbers = counter(heading).at(location)
-  numbering(if appendix-mode.at(location) { "A.1" } else { "1.1" }, ..numbers)
+  format-chapter-number(appendix-mode.at(location), ..numbers)
 }
 
 #let chapter-scoped-numbering(number) = context {
@@ -209,7 +215,7 @@
   if chapter == 0 {
     numbering("1", number)
   } else {
-    numbering(if appendix-mode.get() { "A.1" } else { "1.1" }, chapter, number)
+    format-chapter-number(appendix-mode.get(), chapter, number)
   }
 }
 
@@ -219,16 +225,34 @@
   counter(figure.where(kind: "listing")).update(0)
 }
 
-#let float-number-at(target, location) = {
-  let chapter = counter(heading).at(location).first()
-  let number = counter(target).at(location).first()
+#let format-float-number(chapter, number, in-appendix) = {
   if chapter == 0 {
     numbering("1", number)
   } else {
-    numbering(if appendix-mode.at(location) { "A.1" } else { "1.1" }, chapter, number)
+    format-chapter-number(in-appendix, chapter, number)
   }
 }
 
+#let float-number-at(target, location) = format-float-number(
+  counter(heading).at(location).first(),
+  counter(target).at(location).first(),
+  appendix-mode.at(location),
+)
+
+#let figure-reference(reference) = context {
+  let target = reference.element
+  if target != none and target.func() == figure {
+    let location = target.location()
+    let chapter = counter(heading).at(location).first()
+    let number = target.counter.at(location).first()
+    link(location)[#target.supplement #format-float-number(chapter, number, appendix-mode.at(location))]
+  } else {
+    reference
+  }
+}
+
+// Native outlines evaluate numbering in the outline's context. Render entries at
+// their source locations so appendix and chapter-scoped labels stay correct.
 #let float-outline(target) = {
   for figure-element in query(target.and(figure.where(outlined: true))) {
     let location = figure-element.location()
@@ -354,6 +378,7 @@
   set document(title: title, author: (author,))
   thesis-language.update(lang)
   appendix-mode.update(false)
+  running-heading.update(none)
   part-counter.update(0)
   set page(
     paper: "a4",
@@ -370,15 +395,20 @@
   set enum(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set math.equation(numbering: "(1)")
   show figure.where(kind: image): set figure(numbering: chapter-scoped-numbering)
+  show figure.where(kind: raw): set figure(numbering: chapter-scoped-numbering)
   show figure.where(kind: table): set figure(numbering: chapter-scoped-numbering)
   show figure.where(kind: "listing"): set figure(numbering: chapter-scoped-numbering)
   set table(stroke: none)
 
   show link: set text(fill: royalblue)
+  show ref: figure-reference
   show raw: set text(font: mono-font, size: 8.5pt)
   show figure.caption: it => block(above: 5pt, text(size: 9pt, it))
   show heading.where(level: 1): it => {
-    if it.numbering != none { reset-float-counters() }
+    if it.numbering != none {
+      reset-float-counters()
+      running-heading.update(it.body)
+    }
     pagebreak(weak: true)
     v(0pt)
     block(height: 25mm, above: 0pt, below: 0.8em)[
@@ -416,15 +446,15 @@
   }
   clear-page()
 
-  set page(header: context {
-    let hs = query(heading.where(level: 1).before(here()))
+  let running-header = context {
+    let title = running-heading.get()
     let opening = query(heading.where(level: 1).after(here())).any(h => h.location().page() == here().page())
-    if hs.len() > 0 and not opening {
-      align(if calc.odd(here().page()) { right } else { left }, tracked-small-caps(hs.last().body, size: 8pt, fill: rgb("444444")))
+    if title != none and not opening {
+      align(if calc.odd(here().page()) { right } else { left }, tracked-small-caps(title, size: 8pt, fill: rgb("444444")))
       v(2pt)
       line(length: 100%, stroke: 0.35pt + rgb("aaaaaa"))
     }
-  })
+  }
 
   context if show-outlines {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).contents)
@@ -457,7 +487,7 @@
   }
 
   counter(page).update(1)
-  set page(numbering: "1")
+  set page(numbering: "1", header: running-header)
   body
   appendix-mode.update(false)
 
