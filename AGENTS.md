@@ -10,7 +10,8 @@
 
 ## Implementation
 
-- Prefer small, direct, idiomatic Typst changes over helpers, state machines, custom rendering, or dependencies.
+- Prefer small, direct, idiomatic Typst changes over helpers, state machines, or custom rendering.
+- Do not hand-roll functionality that Typst's standard library or a mature, actively maintained Typst package already provides well. Check Typst Universe before implementing document infrastructure such as glossaries, acronyms, theorem systems, citations, indexes, or advanced counters; use a pinned package version unless a documented project-specific requirement makes the package unsuitable.
 - Preserve native Typst behavior for headings, figures, references, outlines, counters, and selectors unless a verified limitation requires a narrow workaround.
 - Use semantic intermediate variables when they explain intent, such as `indent`, `chapter-title`, or `floats-in-chapter`. Do not inline meaningful calculations merely to reduce lines.
 - Do not introduce aliases for already-readable Typst expressions such as `figure.where(kind: image)` unless reuse or abstraction materially improves the code.

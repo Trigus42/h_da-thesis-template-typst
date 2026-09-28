@@ -1,3 +1,5 @@
+#import "@preview/glossarium:0.5.10": gls, print-glossary, get-entry-back-references
+
 #let maroon = rgb("800000")
 #let halfgray = rgb("8c8c8c")
 #let royalblue = rgb("4169e1")
@@ -6,7 +8,6 @@
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
 #let appendix-mode = state("hda-thesis.appendix-mode", false)
 #let thesis-language = state("hda-thesis.language", "de")
-#let used-acronyms = state("hda-thesis.used-acronyms", ())
 #let thesis-data = state("hda-thesis.data", none)
 
 #let words = (
@@ -143,14 +144,7 @@
   pagebreak()
 }
 
-#let acronym(short) = context {
-  used-acronyms.update(current => if current.contains(short) {
-    current
-  } else {
-    current + (short,)
-  })
-  short
-}
+#let acronym(key) = gls(key)
 
 // Begin the numbered body: restart pagination. The running header is bound once
 // on the global page setup in `thesis`; it renders only on the body pages of
@@ -319,30 +313,25 @@
   }
 }
 
-// Render the list of acronyms actually referenced through `acronym(...)`. The
-// referenced set is only complete once the whole document is processed, so it is
-// read with `.final()`; the caller supplies both the section title and the
-// acronym definitions.
-#let acronyms-used(title, acronyms) = context {
-  assert(type(acronyms) == array, message: "acronyms must be an array of two-item arrays")
-  for entry in acronyms {
-    assert(type(entry) == array and entry.len() == 2, message: "each acronym entry must be a two-item array")
-  }
-  let used = used-acronyms.final()
-  let unknown = used.filter(short => not acronyms.any(it => it.at(0) == short))
-  assert(unknown.len() == 0, message: "unknown acronym: " + unknown.join(", "))
-  if used.len() > 0 {
-    unnumbered-heading(title)
-    table(
-      columns: (35mm, 1fr),
-      inset: (x: 0pt, y: 4pt),
-      ..acronyms.filter(x => used.contains(x.at(0))).map(x => (
-        box(tracked-small-caps(x.at(0))),
-        x.at(1),
-      )).flatten(),
-    )
-    clear-page()
-  }
+// Glossarium owns acronym tracking, first-use expansion, and links. This wrapper
+// only adapts its output to the thesis's two-column abbreviation list.
+#let acronyms-used(title, acronyms) = {
+  unnumbered-heading(title)
+  print-glossary(
+    acronyms,
+    user-print-gloss: (entry, ..args) => context {
+      let first-use = get-entry-back-references(entry).first().dest
+      grid(
+        columns: (35mm, 1fr),
+        column-gutter: 0pt,
+        row-gutter: 0pt,
+        inset: (x: 0pt, y: 4pt),
+        box(link(first-use, tracked-small-caps(entry.short))),
+        entry.long,
+      )
+    },
+  )
+  clear-page()
 }
 
 // Render a two-column term/definition list under an unnumbered section heading.

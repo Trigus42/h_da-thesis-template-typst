@@ -1,4 +1,9 @@
 #import "template.typ": thesis, mainmatter, outlines, part, appendix
+#import "@preview/glossarium:0.5.10": make-glossary, register-glossary
+#import "matter/abbreviations.typ": abbreviations, abbreviations-list
+
+#show: make-glossary
+#register-glossary(abbreviations)
 
 #show: thesis.with(
   title: "A Classic Thesis Style",
@@ -19,7 +24,7 @@
 #include "matter/abstract-en.typ"
 #include "matter/abstract-de.typ"
 #outlines()
-#include "matter/abbreviations.typ"
+#abbreviations-list()
 
 #mainmatter()
 

@@ -1,5 +1,11 @@
 #import "../template.typ": thesis, mainmatter, outlines, appendix, part, thesis-listing, thesis-table
+#import "../template.typ": acronym, acronyms-used
 #import "../template.typ": float-number, heading-number-at, part-entry
+#import "@preview/glossarium:0.5.10": make-glossary, register-glossary
+
+#show: make-glossary
+#let abbreviations = ((key: "api", short: "API", long: "Application Programming Interface"),)
+#register-glossary(abbreviations)
 
 #show: thesis.with(
   title: "Edge Cases",
@@ -14,6 +20,7 @@
 )
 
 #outlines()
+#acronyms-used("Abbreviations", abbreviations)
 #mainmatter()
 
 #part("Body")
@@ -38,6 +45,8 @@
 = First Chapter <first-chapter>
 
 == A Section <first-section>
+
+The #acronym("api") is linked to its abbreviation entry. Later uses show #acronym("api").
 
 #figure(rect(width: 20mm, height: 10mm), caption: [First chapter figure]) <first-figure>
 #figure(rect(width: 20mm, height: 10mm), caption: [Excluded from the outline], outlined: false)
@@ -119,6 +128,15 @@ Suppressed supplement: #ref(<first-figure>, supplement: none).
 #context {
   let parts = query(part-entry).map(it => (it.value.number, it.value.title))
   assert.eq(parts, (("I", "Body"), ("II", "Appendix")), message: "part entries: " + repr(parts))
+}
+
+// Glossarium emits the abbreviation destination and links every use to it.
+#context {
+  let entry = query(<api>).first()
+  let first-use = query(label("__gls:api")).first()
+  assert.eq(query(link.where(dest: <api>)).len(), 2, message: "acronym uses are not linked to the abbreviation entry")
+  assert.eq(query(link.where(dest: first-use.location())).len(), 1, message: "abbreviation entry does not link to its first use")
+  assert(entry.func() == figure, message: "Glossarium did not emit the abbreviation entry")
 }
 
 // The running header must actually be bound to the body pages (the defect that
