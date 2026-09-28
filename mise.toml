@@ -8,4 +8,7 @@ run = "typst compile thesis.typ thesis.pdf"
 run = "typst watch thesis.typ thesis.pdf"
 
 [tasks.check]
-run = "typst compile --diagnostic-format short thesis.typ thesis.pdf"
+run = [
+  "typst compile --diagnostic-format short thesis.typ thesis.pdf",
+  "typst compile --root . --diagnostic-format short tests/edge-cases.typ /tmp/hda-thesis-edge-cases.pdf",
+]

@@ -49,13 +49,12 @@
   ),
 )
 
-#let smallcaps(body, size: 10pt, fill: black) = text(
+#let tracked-small-caps(body, size: 10pt, fill: black) = text(
   font: body-font,
   size: size,
   fill: fill,
   tracking: 0.11em,
-  features: ("smcp",),
-  body,
+  smallcaps(body),
 )
 
 #let allcaps(body, size: 17pt, fill: maroon) = text(
@@ -67,15 +66,13 @@
   upper(body),
 )
 
-#let chapter-glyph(number) = {
-  text(
-    font: body-font,
-    size: 82pt,
-    weight: "regular",
-    fill: halfgray,
-    str(number),
-  )
-}
+#let chapter-glyph(number) = text(
+  font: body-font,
+  size: 82pt,
+  weight: "regular",
+  fill: halfgray,
+  number,
+)
 
 #let clear-page() = pagebreak(weak: true)
 
@@ -164,6 +161,10 @@
 
 #let part-counter = counter("hda-thesis.part")
 #let part(title, lang: auto) = {
+  assert(type(title) == str and title.trim() != "", message: "part title must be a non-empty string")
+  if lang != auto {
+    assert(lang in ("de", "en"), message: "part language must be either \"de\" or \"en\"")
+  }
   clear-page()
   part-counter.step()
   page(header: none, footer: none)[
@@ -171,7 +172,6 @@
     #align(center)[
     #context {
       let language = if lang == auto { thesis-language.get() } else { lang }
-      assert(language in ("de", "en"), message: "part language must be either \"de\" or \"en\"")
       text(size: 11pt)[#words.at(language).part #part-counter.display("I")]
     }
     #v(1em)
@@ -185,7 +185,6 @@
 #let appendix() = {
   appendix-mode.update(true)
   counter(heading).update(0)
-  set heading(numbering: "A.1")
 }
 
 #let margin-note(body) = place(
@@ -196,40 +195,78 @@
   block(width: 27mm, text(size: 7.8pt, style: "italic", fill: rgb("555555"), body)),
 )
 
-#let float-number(target, location) = context {
-  let chapter = counter(heading).at(location).first()
-  let in-appendix = appendix-mode.at(location)
-  let sequence = query(target.before(location)).filter(it => (
-    counter(heading).at(it.location()).first() == chapter
-      and appendix-mode.at(it.location()) == in-appendix
-  )).len() + 1
-  if in-appendix {
-    numbering("A.1", chapter, sequence)
+#let chapter-numbering(..numbers) = context {
+  numbering(if appendix-mode.get() { "A.1" } else { "1.1" }, ..numbers)
+}
+
+#let heading-number-at(location) = {
+  let numbers = counter(heading).at(location)
+  numbering(if appendix-mode.at(location) { "A.1" } else { "1.1" }, ..numbers)
+}
+
+#let chapter-scoped-numbering(number) = context {
+  let chapter = counter(heading).get().first()
+  if chapter == 0 {
+    numbering("1", number)
   } else {
-    numbering("1.1", chapter, sequence)
+    numbering(if appendix-mode.get() { "A.1" } else { "1.1" }, chapter, number)
+  }
+}
+
+#let reset-float-counters() = {
+  counter(figure.where(kind: image)).update(0)
+  counter(figure.where(kind: table)).update(0)
+  counter(figure.where(kind: "listing")).update(0)
+}
+
+#let float-number-at(target, location) = {
+  let chapter = counter(heading).at(location).first()
+  let number = counter(target).at(location).first()
+  if chapter == 0 {
+    numbering("1", number)
+  } else {
+    numbering(if appendix-mode.at(location) { "A.1" } else { "1.1" }, chapter, number)
   }
 }
 
 #let float-outline(target) = {
-  for it in query(target.and(figure.where(outlined: true))) {
-    let location = it.location()
+  for figure-element in query(target.and(figure.where(outlined: true))) {
+    let location = figure-element.location()
     link(location)[
-      #it.supplement #float-number(target, location) #h(1em) #it.caption.body
+      #figure-element.supplement #float-number-at(target, location) #h(1em) #figure-element.caption.body
       #box(width: 1fr, repeat[.])
-      #numbering("1", ..counter(page).at(location))
+      #context counter(page).display(at: location)
     ]
     parbreak()
   }
 }
 
-#let thesis-table(body, caption: none, supplement: auto) = context figure(
+#let heading-outline(depth: 3) = {
+  for heading-element in query(heading.where(outlined: true)) {
+    if heading-element.level <= depth {
+      let location = heading-element.location()
+      let indent = (heading-element.level - 1) * 1.5em
+      link(location)[
+        #h(indent)
+        #if heading-element.numbering != none [#heading-number-at(location) #h(1em)]
+        #heading-element.body
+        #box(width: 1fr, repeat[.])
+        #context counter(page).display(at: location)
+      ]
+      parbreak()
+    }
+  }
+}
+
+#let thesis-table(body, caption: none, supplement: auto, ..options) = figure(
   body,
   kind: table,
-  supplement: if supplement == auto { words.at(thesis-language.get()).table } else { supplement },
+  supplement: supplement,
   caption: caption,
+  ..options,
 )
 
-#let listing(body, caption: none, supplement: auto) = context figure(
+#let thesis-listing(body, caption: none, supplement: auto, ..options) = context figure(
   kind: "listing",
   caption: caption,
   supplement: if supplement == auto { words.at(thesis-language.get()).listing } else { supplement },
@@ -240,6 +277,7 @@
     #v(4pt)
     #line(length: 100%, stroke: 0.45pt)
   ],
+  ..options,
 )
 
 #let theorem(title: none, body) = context block(above: 1em, below: 1em)[
@@ -285,6 +323,13 @@
   ) {
     assert(type(value) == str and value.trim() != "", message: name + " must be a non-empty string")
   }
+  for (name, value) in (
+    ("subtitle", subtitle),
+    ("student-id", student-id),
+    ("second-supervisor", second-supervisor),
+  ) {
+    assert(value == none or type(value) == str, message: name + " must be a string or none")
+  }
   for (name, entries) in (("acronyms", acronyms), ("glossary", glossary)) {
     assert(type(entries) == array, message: name + " must be an array of two-item arrays")
     for entry in entries {
@@ -320,20 +365,20 @@
   )
   set text(font: body-font, size: 11pt, lang: lang)
   set par(justify: true, leading: 0.69em)
-  set heading(numbering: "1.1")
+  set heading(numbering: chapter-numbering)
   set list(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set enum(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set math.equation(numbering: "(1)")
-  set figure(numbering: "1")
-  show figure.where(kind: image): set figure(numbering: _ => context float-number(figure.where(kind: image), here()))
-  show figure.where(kind: table): set figure(numbering: _ => context float-number(figure.where(kind: table), here()))
-  show figure.where(kind: "listing"): set figure(numbering: _ => context float-number(figure.where(kind: "listing"), here()))
+  show figure.where(kind: image): set figure(numbering: chapter-scoped-numbering)
+  show figure.where(kind: table): set figure(numbering: chapter-scoped-numbering)
+  show figure.where(kind: "listing"): set figure(numbering: chapter-scoped-numbering)
   set table(stroke: none)
 
   show link: set text(fill: royalblue)
   show raw: set text(font: mono-font, size: 8.5pt)
   show figure.caption: it => block(above: 5pt, text(size: 9pt, it))
   show heading.where(level: 1): it => {
+    if it.numbering != none { reset-float-counters() }
     pagebreak(weak: true)
     v(0pt)
     block(height: 25mm, above: 0pt, below: 0.8em)[
@@ -342,7 +387,7 @@
           right + top,
           dx: 28mm,
           dy: -6mm,
-          context chapter-glyph(numbering(it.numbering, ..counter(heading).at(it.location()))),
+          chapter-glyph(heading-number-at(it.location())),
         )
       }
       #text(font: body-font, size: 12pt, fill: black, tracking: 0.085em, weight: "regular", upper(it.body))
@@ -351,23 +396,23 @@
     ]
   }
   show heading.where(level: 2): it => block(above: 1.4em, below: 0.9em)[
-    #smallcaps[#if it.numbering != none [#context numbering(it.numbering, ..counter(heading).at(it.location())) #h(1em)]#it.body]
+    #tracked-small-caps[#if it.numbering != none [#heading-number-at(it.location()) #h(1em)]#it.body]
   ]
   show heading.where(level: 3): it => block(above: 1.1em, below: 0.7em)[
-    #text(style: "italic")[#if it.numbering != none [#context numbering(it.numbering, ..counter(heading).at(it.location())) #h(1em)]#it.body]
+    #text(style: "italic")[#if it.numbering != none [#heading-number-at(it.location()) #h(1em)]#it.body]
   ]
   show heading.where(level: 4): it => block(above: 1em, below: 0.6em)[
-    #text(style: "italic")[#if it.numbering != none [#context numbering(it.numbering, ..counter(heading).at(it.location())) #h(1em)]#it.body]
+    #text(style: "italic")[#if it.numbering != none [#heading-number-at(it.location()) #h(1em)]#it.body]
   ]
 
   title-page(data, lang)
   title-back(data)
   if show-declaration { declaration(data, lang) }
   if abstract-en != none {
-    unnumbered-page("Abstract", context { set text(lang: "en"); abstract-en })
+    unnumbered-page("Abstract", { set text(lang: "en"); abstract-en })
   }
   if abstract-de != none {
-    unnumbered-page("Zusammenfassung", context { set text(lang: "de"); abstract-de })
+    unnumbered-page("Zusammenfassung", { set text(lang: "de"); abstract-de })
   }
   clear-page()
 
@@ -375,7 +420,7 @@
     let hs = query(heading.where(level: 1).before(here()))
     let opening = query(heading.where(level: 1).after(here())).any(h => h.location().page() == here().page())
     if hs.len() > 0 and not opening {
-      align(if calc.odd(here().page()) { right } else { left }, smallcaps(hs.last().body, size: 8pt, fill: rgb("444444")))
+      align(if calc.odd(here().page()) { right } else { left }, tracked-small-caps(hs.last().body, size: 8pt, fill: rgb("444444")))
       v(2pt)
       line(length: 100%, stroke: 0.35pt + rgb("aaaaaa"))
     }
@@ -383,7 +428,7 @@
 
   context if show-outlines {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).contents)
-    outline(title: none, depth: 3, indent: auto)
+    heading-outline(depth: 3)
     clear-page()
     if query(figure.where(kind: image, outlined: true)).len() > 0 {
       heading(level: 1, numbering: none, outlined: false, words.at(lang).figures)
@@ -406,7 +451,7 @@
     table(
       columns: (27mm, 1fr),
       inset: (x: 0pt, y: 4pt),
-      ..acronyms.map(x => (smallcaps(x.at(0)), x.at(1))).flatten(),
+      ..acronyms.map(x => (tracked-small-caps(x.at(0)), x.at(1))).flatten(),
     )
     clear-page()
   }

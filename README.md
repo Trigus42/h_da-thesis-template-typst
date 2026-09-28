@@ -15,7 +15,7 @@ The output is `thesis.pdf`. Use `mise run watch` while writing.
 
 Edit the arguments to `thesis.with(...)` in `thesis.typ`. Content is split between `chapters/`, `frontmatter/`, `assets/`, and `bibliography.bib`.
 
-The reusable API supports German and English labels, thesis metadata, optional subtitle, declaration, abstracts, contents and float lists, acronyms, glossary, bibliography, part pages, appendix numbering, margin notes, theorem/proof blocks, and ClassicThesis-style headings.
+The reusable API supports German and English labels, thesis metadata, optional subtitle, declaration, abstracts, contents and float lists, acronyms, glossary, bibliography, part pages, appendix numbering, margin notes, theorem/proof blocks, and ClassicThesis-style headings. Import `thesis-table` and `thesis-listing` for captioned tables and source listings; both forward native `figure` options such as `placement` and `outlined`.
 
 Start appendices with `#appendix()`. It resets chapter numbering and switches heading, outline, and float labels to alphabetic chapter prefixes.
 

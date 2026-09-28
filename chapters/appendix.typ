@@ -1,4 +1,4 @@
-#import "../template.typ": margin-note, listing, thesis-table
+#import "../template.typ": margin-note, thesis-listing, thesis-table
 
 = Introduction to the ClassicThesis style
 
@@ -42,7 +42,7 @@ Lorem ipsum at nusquam appellantur his, ut eos erant homero concludaturque. Albu
 
 Equidem detraxit cu nam, vix eu delenit periculis. Eos ut vero constituto, no vidit propriae complectitur sea.
 
-#listing(
+#thesis-listing(
   ```pascal
   for i := maxint downto 0 do
   begin

@@ -1,4 +1,4 @@
-#import "../template.typ": theorem, proof, listing, thesis-table
+#import "../template.typ": theorem, proof, thesis-listing, thesis-table
 
 = Ein weiteres Kapitel
 
@@ -39,7 +39,7 @@ Aenean blandit neque eget nunc euismod ac dignissim enim euismod. Nullam semper,
 
 == Tabellen
 
-#figure(
+#thesis-table(
   table(
     columns: (1.7fr, 1fr, 1fr),
     align: (left, center, center),
@@ -55,7 +55,7 @@ Aenean blandit neque eget nunc euismod ac dignissim enim euismod. Nullam semper,
 
 == Listings
 
-#listing(
+#thesis-listing(
   ```typ
   #let square(x) = x * x
   #for value in range(1, 5) {
