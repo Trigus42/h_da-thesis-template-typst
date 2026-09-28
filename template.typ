@@ -231,7 +231,14 @@
   let chapters-before = query(heading.where(level: 1)).filter(it => it.location().page() <= page-number)
   let current-chapter = chapters-before.at(-1, default: none)
   if current-chapter == none or current-chapter.numbering == none { return }
-  let sections = query(heading.where(level: 2).after(current-chapter.location())).filter(it => it.numbering != none)
+  let later-chapters = query(heading.where(level: 1).after(current-chapter.location()))
+  let next-chapter = later-chapters.at(0, default: none)
+  let section-selector = heading.where(level: 2).after(current-chapter.location())
+  let sections = query(if next-chapter == none {
+    section-selector
+  } else {
+    section-selector.before(next-chapter.location())
+  }).filter(it => it.numbering != none)
   let sections-on-page = sections.filter(it => it.location().page() == page-number)
   let sections-before = sections.filter(it => it.location().page() < page-number)
   let running-heading = if sections-on-page.len() > 0 {

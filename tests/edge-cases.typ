@@ -70,10 +70,19 @@
 
 #figure(rect(width: 20mm, height: 10mm), caption: [Second chapter figure])
 
+// Header selection must stay within the current chapter. The second chapter has
+// no sections, so a continuation page must fall back to its chapter heading
+// rather than selecting the following appendix section.
+#pagebreak()
+#lorem(180)
+#metadata(none) <second-chapter-continuation>
+
 #part("Appendix")
 #appendix()
 
 = Appendix Chapter <appendix-chapter>
+
+== Later Appendix Section
 
 #figure(rect(width: 20mm, height: 10mm), caption: [Appendix figure]) <appendix-figure>
 
@@ -119,3 +128,14 @@ Suppressed supplement: #ref(<first-figure>, supplement: none).
   page.header not in (auto, none),
   message: "running header is not bound on body pages: " + repr(page.header),
 )
+
+#context {
+  let second-chapter = query(<second-chapter>).first()
+  let appendix-chapter = query(<appendix-chapter>).first()
+  let sections = query(
+    heading.where(level: 2)
+      .after(second-chapter.location())
+      .before(appendix-chapter.location()),
+  ).filter(it => it.numbering != none)
+  assert.eq(sections, (), message: "later chapter sections leaked into the second chapter")
+}
