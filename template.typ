@@ -225,12 +225,30 @@
   }
 }
 
-#let figure-reference(reference) = context {
+// Figure kinds that carry chapter-scoped numbering. References to these must
+// resolve the number at the target's location; native rendering would instead
+// evaluate the numbering closure in the referencing context.
+#let float-kinds = (image, table, raw, "listing")
+
+#let labeled-number(supplement, number) = if supplement == none {
+  number
+} else {
+  [#supplement #number]
+}
+
+#let reference-handler(reference) = context {
   let target = reference.element
-  if target != none and target.func() == figure and reference.supplement == auto {
+  if target == none {
+    reference
+  } else if target.func() == heading and target.numbering != none {
     let location = target.location()
+    let supplement = if reference.supplement == auto { target.supplement } else { reference.supplement }
+    link(location, labeled-number(supplement, heading-number-at(location)))
+  } else if target.func() == figure and target.kind in float-kinds {
+    let location = target.location()
+    let supplement = if reference.supplement == auto { target.supplement } else { reference.supplement }
     let selector = figure.where(kind: target.kind)
-    link(location)[#target.supplement #float-number(selector, location)]
+    link(location, labeled-number(supplement, float-number(selector, location)))
   } else {
     reference
   }
@@ -269,33 +287,27 @@
   }
 }
 
-#let thesis-table(body, caption: none, supplement: auto, ..options) = context {
-  let resolved-supplement = if supplement == auto { words.at(thesis-language.get()).table } else { supplement }
-  figure(
-    body,
-    kind: table,
-    supplement: resolved-supplement,
-    caption: caption,
-    ..options,
-  )
-}
+#let thesis-table(body, caption: none, supplement: auto, ..options) = figure(
+  body,
+  kind: table,
+  supplement: if supplement == auto { context words.at(thesis-language.get()).table } else { supplement },
+  caption: caption,
+  ..options,
+)
 
-#let thesis-listing(body, caption: none, supplement: auto, ..options) = context {
-  let resolved-supplement = if supplement == auto { words.at(thesis-language.get()).listing } else { supplement }
-  figure(
-    kind: "listing",
-    caption: caption,
-    supplement: resolved-supplement,
-    block(width: 100%)[
-      #line(length: 100%, stroke: 0.45pt)
-      #v(4pt)
-      #body
-      #v(4pt)
-      #line(length: 100%, stroke: 0.45pt)
-    ],
-    ..options,
-  )
-}
+#let thesis-listing(body, caption: none, supplement: auto, ..options) = figure(
+  kind: "listing",
+  caption: caption,
+  supplement: if supplement == auto { context words.at(thesis-language.get()).listing } else { supplement },
+  block(width: 100%)[
+    #line(length: 100%, stroke: 0.45pt)
+    #v(4pt)
+    #body
+    #v(4pt)
+    #line(length: 100%, stroke: 0.45pt)
+  ],
+  ..options,
+)
 
 #let theorem(title: none, body) = context block(above: 1em, below: 1em)[
   #strong[#words.at(thesis-language.get()).theorem#if title != none [ (#title)].] #body
@@ -389,11 +401,12 @@
   set figure(numbering: "1")
   show figure.where(kind: image): set figure(numbering: _ => context float-number(figure.where(kind: image), here()))
   show figure.where(kind: table): set figure(numbering: _ => context float-number(figure.where(kind: table), here()))
+  show figure.where(kind: raw): set figure(numbering: _ => context float-number(figure.where(kind: raw), here()))
   show figure.where(kind: "listing"): set figure(numbering: _ => context float-number(figure.where(kind: "listing"), here()))
   set table(stroke: none)
 
   show link: set text(fill: royalblue)
-  show ref: figure-reference
+  show ref: reference-handler
   show raw: set text(font: mono-font, size: 8.5pt)
   show figure.caption: it => block(above: 5pt, text(size: 9pt, it))
   show heading.where(level: 1): it => {
@@ -436,10 +449,14 @@
 
   let running-header = context {
     let page-number = here().page()
-    let numbered-chapters = query(heading.where(level: 1).before(here())).filter(it => it.numbering != none)
+    let chapters-before = query(heading.where(level: 1).before(here()))
+    let current-chapter = chapters-before.at(-1, default: none)
     let is-chapter-opening = query(heading.where(level: 1).after(here())).any(it => it.location().page() == page-number)
-    if numbered-chapters.len() > 0 and not is-chapter-opening {
-      let chapter-title = numbered-chapters.last().body
+    // Suppress the header on chapter openings and on the pages of unnumbered
+    // sections such as the glossary and bibliography, whose headings carry no
+    // numbering and therefore no running title.
+    if current-chapter != none and current-chapter.numbering != none and not is-chapter-opening {
+      let chapter-title = current-chapter.body
       let alignment = if calc.odd(page-number) { right } else { left }
       align(alignment, tracked-small-caps(chapter-title, size: 8pt, fill: rgb("444444")))
       v(2pt)
