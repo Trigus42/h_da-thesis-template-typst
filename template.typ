@@ -6,6 +6,10 @@
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
 #let appendix-mode = state("hda-thesis.appendix-mode", false)
 #let thesis-language = state("hda-thesis.language", "de")
+#let used-acronyms = state("hda-thesis.used-acronyms", ())
+#let thesis-data = state("hda-thesis.data", none)
+#let running-header = state("hda-thesis.running-header", none)
+#let page-number-footer = state("hda-thesis.page-number-footer", none)
 
 #let words = (
   de: (
@@ -137,7 +141,10 @@
   pagebreak()
 }
 
-#let declaration(data, lang, body) = {
+#let declaration(body) = context {
+  let data = thesis-data.get()
+  let lang = thesis-language.get()
+  assert(data != none, message: "declaration must be used inside thesis")
   heading(level: 1, numbering: none, outlined: false, words.at(lang).declaration)
   body
   v(2em)
@@ -145,6 +152,26 @@
   v(10mm)
   align(right, block(width: 53mm)[#line(length: 100%) #align(center, data.author)])
   clear-page()
+}
+
+#let abstract(title, lang, body) = {
+  assert(lang in ("de", "en"), message: "abstract language must be either \"de\" or \"en\"")
+  unnumbered-page(title, { set text(lang: lang); body })
+}
+
+#let acronym(short) = context {
+  used-acronyms.update(current => if current.contains(short) {
+    current
+  } else {
+    current + (short,)
+  })
+  short
+}
+
+#let mainmatter() = context {
+  clear-page()
+  counter(page).update(1)
+  set page(numbering: none, header: running-header.get(), footer: page-number-footer.get())
 }
 
 #let part-counter = counter("hda-thesis.part")
@@ -261,6 +288,52 @@
   }
 }
 
+#let print-acronyms(acronyms) = context {
+  assert(type(acronyms) == array, message: "acronyms must be an array of two-item arrays")
+  for entry in acronyms {
+    assert(type(entry) == array and entry.len() == 2, message: "each acronym entry must be a two-item array")
+  }
+  let unknown = used-acronyms.get().filter(short => not acronyms.any(it => it.at(0) == short))
+  assert(unknown.len() == 0, message: "unknown acronym: " + unknown.join(", "))
+  if used-acronyms.get().len() > 0 {
+    heading(level: 1, numbering: none, outlined: false, words.at(thesis-language.get()).acronyms)
+    table(
+      columns: (35mm, 1fr),
+      inset: (x: 0pt, y: 4pt),
+      ..acronyms.filter(x => used-acronyms.get().contains(x.at(0))).map(x => (
+        box(tracked-small-caps(x.at(0))),
+        x.at(1),
+      )).flatten(),
+    )
+    clear-page()
+  }
+}
+
+#let print-glossary(glossary) = context {
+  assert(type(glossary) == array, message: "glossary must be an array of two-item arrays")
+  for entry in glossary {
+    assert(type(entry) == array and entry.len() == 2, message: "each glossary entry must be a two-item array")
+  }
+  if glossary.len() > 0 {
+    heading(level: 1, numbering: none, outlined: false, words.at(thesis-language.get()).glossary)
+    for entry in glossary {
+      grid(
+        columns: (43mm, 1fr),
+        column-gutter: 2mm,
+        row-gutter: 0.75em,
+        text(hyphenate: false, strong(entry.at(0))),
+        entry.at(1),
+      )
+    }
+    clear-page()
+  }
+}
+
+#let print-bibliography(file) = context {
+  heading(level: 1, numbering: none, outlined: false, words.at(thesis-language.get()).bibliography)
+  bibliography(file, title: none, style: "ieee")
+}
+
 #let heading-outline(depth: 3) = {
   for heading-element in query(heading.where(outlined: true)) {
     if heading-element.level <= depth {
@@ -276,6 +349,28 @@
       parbreak()
       v(-0.25em)
     }
+  }
+}
+
+#let outlines() = context {
+  let lang = thesis-language.get()
+  heading(level: 1, numbering: none, outlined: false, words.at(lang).contents)
+  heading-outline(depth: 3)
+  clear-page()
+  if query(figure.where(kind: image, outlined: true)).len() > 0 {
+    heading(level: 1, numbering: none, outlined: false, words.at(lang).figures)
+    float-outline(figure.where(kind: image))
+    clear-page()
+  }
+  if query(figure.where(kind: table, outlined: true)).len() > 0 {
+    heading(level: 1, numbering: none, outlined: false, words.at(lang).tables)
+    float-outline(figure.where(kind: table))
+    clear-page()
+  }
+  if query(figure.where(kind: "listing", outlined: true)).len() > 0 {
+    heading(level: 1, numbering: none, outlined: false, words.at(lang).listings)
+    float-outline(figure.where(kind: "listing"))
+    clear-page()
   }
 }
 
@@ -322,14 +417,6 @@
   location: "Darmstadt",
   date: datetime.today().display("[day]. [month repr:long] [year]"),
   language: "de",
-  declaration-body: none,
-  abstract-en: none,
-  abstract-de: none,
-  bibliography-file: none,
-  acronyms: (),
-  glossary: (),
-  show-declaration: true,
-  show-outlines: true,
   body,
 ) = {
   assert(language in ("de", "en"), message: "language must be either \"de\" or \"en\"")
@@ -352,12 +439,6 @@
   ) {
     assert(value == none or type(value) == str, message: name + " must be a string or none")
   }
-  for (name, entries) in (("acronyms", acronyms), ("glossary", glossary)) {
-    assert(type(entries) == array, message: name + " must be an array of two-item arrays")
-    for entry in entries {
-      assert(type(entry) == array and entry.len() == 2, message: "each " + name + " entry must be a two-item array")
-    }
-  }
   let lang = language
   let data = (
     title: title,
@@ -375,6 +456,7 @@
 
   set document(title: title, author: (author,))
   thesis-language.update(lang)
+  thesis-data.update(data)
   appendix-mode.update(false)
   part-counter.update(0)
   set page(
@@ -431,19 +513,8 @@
 
   title-page(data, lang)
   title-back(data)
-  if show-declaration {
-    assert(declaration-body != none, message: "declaration-body is required when show-declaration is true")
-    declaration(data, lang, declaration-body)
-  }
-  if abstract-en != none {
-    unnumbered-page("Abstract", { set text(lang: "en"); abstract-en })
-  }
-  if abstract-de != none {
-    unnumbered-page("Zusammenfassung", { set text(lang: "de"); abstract-de })
-  }
-  clear-page()
 
-  let running-header = context {
+  running-header.update(context {
     let page-number = here().page()
     let chapters-before = query(heading.where(level: 1).before(here()))
     let current-chapter = chapters-before.at(-1, default: none)
@@ -458,66 +529,16 @@
       v(2pt)
       line(length: 100%, stroke: 0.35pt + rgb("aaaaaa"))
     }
-  }
+  })
 
-  let page-number-footer = context {
+  page-number-footer.update(context {
     let page-number = here().page()
     let headings-on-page = query(heading.where(level: 1)).filter(it => it.location().page() == page-number)
     if headings-on-page.len() == 0 {
       align(center, counter(page).display("1"))
     }
-  }
+  })
 
-  context if show-outlines {
-    heading(level: 1, numbering: none, outlined: false, words.at(lang).contents)
-    heading-outline(depth: 3)
-    clear-page()
-    if query(figure.where(kind: image, outlined: true)).len() > 0 {
-      heading(level: 1, numbering: none, outlined: false, words.at(lang).figures)
-      float-outline(figure.where(kind: image))
-      clear-page()
-    }
-    if query(figure.where(kind: table, outlined: true)).len() > 0 {
-      heading(level: 1, numbering: none, outlined: false, words.at(lang).tables)
-      float-outline(figure.where(kind: table))
-      clear-page()
-    }
-    if query(figure.where(kind: "listing", outlined: true)).len() > 0 {
-      heading(level: 1, numbering: none, outlined: false, words.at(lang).listings)
-      float-outline(figure.where(kind: "listing"))
-      clear-page()
-    }
-  }
-  if acronyms.len() > 0 {
-    heading(level: 1, numbering: none, outlined: false, words.at(lang).acronyms)
-    table(
-      columns: (35mm, 1fr),
-      inset: (x: 0pt, y: 4pt),
-      ..acronyms.map(x => (box(tracked-small-caps(x.at(0))), x.at(1))).flatten(),
-    )
-    clear-page()
-  }
-
-  counter(page).update(1)
-  set page(numbering: none, header: running-header, footer: page-number-footer)
   body
   appendix-mode.update(false)
-
-  if glossary.len() > 0 {
-    heading(level: 1, numbering: none, outlined: false, words.at(lang).glossary)
-    for entry in glossary {
-      grid(
-        columns: (43mm, 1fr),
-        column-gutter: 2mm,
-        row-gutter: 0.75em,
-        text(hyphenate: false, strong(entry.at(0))),
-        entry.at(1),
-      )
-    }
-    clear-page()
-  }
-  if bibliography-file != none {
-    heading(level: 1, numbering: none, outlined: false, words.at(lang).bibliography)
-    bibliography(bibliography-file, title: none, style: "ieee")
-  }
 }

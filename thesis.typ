@@ -1,4 +1,6 @@
-#import "template.typ": thesis, part, appendix
+#import "template.typ": thesis, mainmatter, declaration, abstract
+#import "template.typ": outlines, print-acronyms, print-glossary, print-bibliography
+#import "template.typ": part, appendix
 #import "frontmatter/abbreviations.typ": abbreviations
 #import "frontmatter/glossary.typ": glossary
 
@@ -14,13 +16,15 @@
   location: "Darmstadt",
   date: "24. September 2026",
   language: "de",
-  declaration-body: include "frontmatter/declaration.typ",
-  abstract-en: include "frontmatter/abstract-en.typ",
-  abstract-de: include "frontmatter/abstract-de.typ",
-  bibliography-file: "bibliography.bib",
-  acronyms: abbreviations,
-  glossary: glossary,
 )
+
+#declaration(include "frontmatter/declaration.typ")
+#abstract("Abstract", "en", include "frontmatter/abstract-en.typ")
+#abstract("Zusammenfassung", "de", include "frontmatter/abstract-de.typ")
+#outlines()
+#print-acronyms(abbreviations)
+
+#mainmatter()
 
 #part("Thesis")
 #include "chapters/introduction.typ"
@@ -30,3 +34,6 @@
 #part("Appendix")
 #appendix()
 #include "chapters/appendix.typ"
+
+#print-glossary(glossary)
+#print-bibliography("bibliography.bib")

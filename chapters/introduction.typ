@@ -1,4 +1,4 @@
-#import "../template.typ": margin-note
+#import "../template.typ": margin-note, acronym
 
 = Einleitung <intro>
 
@@ -11,10 +11,10 @@ Illo principalmente su nos. Non message _occidental_ angloromanic da. Debitas ef
 
 == Ziel der Arbeit
 
-Ei choro aeterno antiopam mea, ut eos erant homero concludaturque. Albucius appellantur deterruisset id eam, vivendum partiendo dissentiet ei ius. Vis melius facilisis ea, sea id convenire referrentur. Errem omnium ea per, pro UML congue populo ornatus cu, ex qui dicant nemore melius. No pri diam iriure euismod. Graecis eleifend appellantur quo id.
+Ei choro aeterno antiopam mea, ut eos erant homero concludaturque. Albucius appellantur deterruisset id eam, vivendum partiendo dissentiet ei ius. Vis melius facilisis ea, sea id convenire referrentur. Errem omnium ea per, pro #acronym("UML") congue populo ornatus cu, ex qui dicant nemore melius. No pri diam iriure euismod. Graecis eleifend appellantur quo id.
 
 Ei choro aeterno antiopam mea, labitur bonorum pri no. His no decore nemore graecis. Integer consectetur, mi congue feugiat rhoncus, ante libero consectetur eros, et interdum nulla velit non velit. Mauris pharetra venenatis porttitor. Suspendisse et risus at dui gravida hendrerit.
 
 == Gliederung
 
-Nulla fastidii ea ius, exerci suscipit instructior te nam, in ullum postulant quo. Congue quaestio philosophia his at, sea odio autem vulputate ex. Cu usu mucius iisque voluptua. Sit maiorum propriae at, ea cum API primis intellegat.
+Nulla fastidii ea ius, exerci suscipit instructior te nam, in ullum postulant quo. Congue quaestio philosophia his at, sea odio autem vulputate ex. Cu usu mucius iisque voluptua. Sit maiorum propriae at, ea cum #acronym("API") primis intellegat.

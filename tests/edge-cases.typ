@@ -1,4 +1,4 @@
-#import "../template.typ": thesis, appendix, thesis-listing, thesis-table
+#import "../template.typ": thesis, mainmatter, outlines, appendix, thesis-listing, thesis-table
 #import "../template.typ": float-number, heading-number-at
 
 #show: thesis.with(
@@ -11,9 +11,10 @@
   location: "Test Location",
   date: "28 September 2026",
   language: "en",
-  show-declaration: false,
-  show-outlines: true,
 )
+
+#outlines()
+#mainmatter()
 
 // Compile-time checks for the numbering assigned at each labeled element. These
 // resolve the number at the target's own location, so a regression in
