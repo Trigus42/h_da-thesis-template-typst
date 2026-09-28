@@ -356,11 +356,11 @@
       user-print-gloss: (entry, ..args) => context {
         let first-use = get-entry-back-references(entry).first().dest
         grid(
-          columns: (43mm, 1fr),
-          column-gutter: 2mm,
+          columns: (42mm, 1fr),
+          column-gutter: 3mm,
           row-gutter: 0.75em,
-          text(hyphenate: false, link(first-use, strong(entry.long))),
-          entry.description,
+          align(left + top, par(justify: false, text(hyphenate: false, link(first-use, strong(entry.long))))),
+          align(left + top, par(justify: false, text(hyphenate: false, entry.description))),
         )
       },
     )

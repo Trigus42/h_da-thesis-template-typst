@@ -31,3 +31,8 @@
 - Check representative pages: title, declaration, abstracts, contents/lists, part pages, chapter openings, appendix floats, glossary, and bibliography.
 - Verify labels across captions, references, contents, and float lists, not merely successful compilation.
 - Pay particular attention to clipped numerals, heading placement, text-block margins, page-number leakage, overlaps, stale headers, and appendix numbering.
+
+## Commits
+
+- Use Conventional Commit subjects in the form `type(scope): description`.
+- Scope reusable template changes by template area, using path-like scopes such as `template/glossary`; keep document-specific changes scoped separately.
