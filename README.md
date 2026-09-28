@@ -17,7 +17,9 @@ Edit the arguments to `thesis.with(...)` in `thesis.typ`. Content is split betwe
 
 The reusable API supports German and English labels, thesis metadata, optional subtitle, declaration, abstracts, contents and float lists, acronyms, glossary, bibliography, part pages, appendix numbering, margin notes, theorem/proof blocks, and ClassicThesis-style headings.
 
-Start appendices with `#appendix()` followed by `#set heading(numbering: "A.1")`. The stateful call resets chapter numbering and switches float prefixes; the set rule controls heading and outline labels from that point onward.
+Start appendices with `#appendix()`. It resets chapter numbering and switches heading, outline, and float labels to alphabetic chapter prefixes.
+
+`acronyms` and `glossary` are arrays of two-item arrays, for example `(("API", "Application Programming Interface"),)`. Omit optional text with `none`; required metadata must be non-empty strings. Part pages and table, listing, theorem, and proof labels follow the thesis language automatically.
 
 ## Visual Review
 

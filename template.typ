@@ -1,10 +1,10 @@
 #let maroon = rgb("800000")
 #let halfgray = rgb("8c8c8c")
 #let royalblue = rgb("4169e1")
-#let webgreen = rgb("008000")
 #let body-font = ("Palatino", "Libertinus Serif")
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
-#let appendix-mode = state("appendix-mode", false)
+#let appendix-mode = state("hda-thesis.appendix-mode", false)
+#let thesis-language = state("hda-thesis.language", "de")
 
 #let words = (
   de: (
@@ -22,6 +22,10 @@
     glossary: "Glossar",
     bibliography: "Literatur",
     part: "Teil",
+    table: "Tabelle",
+    listing: "Listing",
+    theorem: "Satz",
+    proof: "Beweis",
   ),
   en: (
     degree-line: "Thesis submitted in partial fulfillment of the requirements for the degree",
@@ -38,6 +42,10 @@
     glossary: "Glossary",
     bibliography: "Bibliography",
     part: "Part",
+    table: "Table",
+    listing: "Listing",
+    theorem: "Theorem",
+    proof: "Proof",
   ),
 )
 
@@ -71,11 +79,6 @@
 
 #let clear-page() = pagebreak(weak: true)
 
-#let clear-to-odd() = {
-  pagebreak(weak: true)
-  context if calc.even(here().page()) { pagebreak() }
-}
-
 #let unnumbered-page(title, body) = {
   clear-page()
   heading(level: 1, numbering: none, outlined: false, title)
@@ -97,7 +100,7 @@
       #text(size: 16pt)[-- #data.faculty --]
       #v(1fr)
       #text(size: 17pt, weight: "bold", data.title)
-      #if data.subtitle != none [#v(3mm)#text(size: 13pt, style: "italic", data.subtitle)]
+      #if data.subtitle != none and data.subtitle != "" [#v(3mm)#text(size: 13pt, style: "italic", data.subtitle)]
       #v(1fr)
       #text(size: 14pt, words.at(lang).degree-line)
       #v(3mm)
@@ -131,7 +134,7 @@
 #let title-back(data) = {
   page(header: none, footer: none)[
     #v(1fr)
-    #data.author: #emph(data.title)#if data.subtitle != none [, #data.subtitle], \© #data.date
+    #data.author: #emph(data.title)#if data.subtitle != none and data.subtitle != "" [, #data.subtitle], \© #data.date
   ]
   pagebreak()
 }
@@ -159,14 +162,18 @@
   clear-page()
 }
 
-#let part-counter = counter("part")
-#let part(title, lang: "de") = {
+#let part-counter = counter("hda-thesis.part")
+#let part(title, lang: auto) = {
   clear-page()
   part-counter.step()
   page(header: none, footer: none)[
     #v(0.31fr)
     #align(center)[
-    #text(size: 11pt)[#words.at(lang).part #context part-counter.display("I")]
+    #context {
+      let language = if lang == auto { thesis-language.get() } else { lang }
+      assert(language in ("de", "en"), message: "part language must be either \"de\" or \"en\"")
+      text(size: 11pt)[#words.at(language).part #part-counter.display("I")]
+    }
     #v(1em)
     #allcaps(title, size: 12pt)
     ]
@@ -178,6 +185,7 @@
 #let appendix() = {
   appendix-mode.update(true)
   counter(heading).update(0)
+  set heading(numbering: "A.1")
 }
 
 #let margin-note(body) = place(
@@ -188,17 +196,13 @@
   block(width: 27mm, text(size: 7.8pt, style: "italic", fill: rgb("555555"), body)),
 )
 
-#let float-label(sequence, location: none) = context {
-  let chapter = if location == none {
-    counter(heading).get().first()
-  } else {
-    counter(heading).at(location).first()
-  }
-  let in-appendix = if location == none {
-    appendix-mode.get()
-  } else {
-    appendix-mode.at(location)
-  }
+#let float-number(target, location) = context {
+  let chapter = counter(heading).at(location).first()
+  let in-appendix = appendix-mode.at(location)
+  let sequence = query(target.before(location)).filter(it => (
+    counter(heading).at(it.location()).first() == chapter
+      and appendix-mode.at(it.location()) == in-appendix
+  )).len() + 1
   if in-appendix {
     numbering("A.1", chapter, sequence)
   } else {
@@ -207,11 +211,10 @@
 }
 
 #let float-outline(target) = {
-  for it in query(target) {
+  for it in query(target.and(figure.where(outlined: true))) {
     let location = it.location()
-    let sequence = counter(target).at(location).first()
     link(location)[
-      #it.supplement #float-label(sequence, location: location) #h(1em) #it.caption.body
+      #it.supplement #float-number(target, location) #h(1em) #it.caption.body
       #box(width: 1fr, repeat[.])
       #numbering("1", ..counter(page).at(location))
     ]
@@ -219,19 +222,17 @@
   }
 }
 
-#let thesis-table(body, caption: none, supplement: "Tabelle") = figure(
+#let thesis-table(body, caption: none, supplement: auto) = context figure(
   body,
   kind: table,
-  supplement: supplement,
-  numbering: n => float-label(n),
+  supplement: if supplement == auto { words.at(thesis-language.get()).table } else { supplement },
   caption: caption,
 )
 
-#let listing(body, caption: none, supplement: "Listing") = figure(
+#let listing(body, caption: none, supplement: auto) = context figure(
   kind: "listing",
-  numbering: n => float-label(n),
   caption: caption,
-  supplement: supplement,
+  supplement: if supplement == auto { words.at(thesis-language.get()).listing } else { supplement },
   block(width: 100%)[
     #line(length: 100%, stroke: 0.45pt)
     #v(4pt)
@@ -241,12 +242,12 @@
   ],
 )
 
-#let theorem(title: none, body) = block(above: 1em, below: 1em)[
-  #strong[Theorem#if title != none [ (#title)].] #body
+#let theorem(title: none, body) = context block(above: 1em, below: 1em)[
+  #strong[#words.at(thesis-language.get()).theorem#if title != none [ (#title)].] #body
 ]
 
-#let proof(body) = block(above: 0.7em, below: 0.9em)[
-  #strong[Proof.] #body #h(1fr) #sym.square.stroked
+#let proof(body) = context block(above: 0.7em, below: 0.9em)[
+  #strong[#words.at(thesis-language.get()).proof.] #body #h(1fr) #sym.square.stroked
 ]
 
 #let thesis(
@@ -272,9 +273,24 @@
   body,
 ) = {
   assert(language in ("de", "en"), message: "language must be either \"de\" or \"en\"")
-  assert(title != "", message: "title must not be empty")
-  assert(author != "", message: "author must not be empty")
-  assert(supervisor != "", message: "supervisor must not be empty")
+  for (name, value) in (
+    ("title", title),
+    ("author", author),
+    ("degree", degree),
+    ("supervisor", supervisor),
+    ("faculty", faculty),
+    ("university", university),
+    ("location", location),
+    ("date", date),
+  ) {
+    assert(type(value) == str and value.trim() != "", message: name + " must be a non-empty string")
+  }
+  for (name, entries) in (("acronyms", acronyms), ("glossary", glossary)) {
+    assert(type(entries) == array, message: name + " must be an array of two-item arrays")
+    for entry in entries {
+      assert(type(entry) == array and entry.len() == 2, message: "each " + name + " entry must be a two-item array")
+    }
+  }
   let lang = language
   let data = (
     title: title,
@@ -291,6 +307,9 @@
   )
 
   set document(title: title, author: (author,))
+  thesis-language.update(lang)
+  appendix-mode.update(false)
+  part-counter.update(0)
   set page(
     paper: "a4",
     margin: (top: 27mm, bottom: 24mm, left: 42mm, right: 38mm),
@@ -305,25 +324,10 @@
   set list(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set enum(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set math.equation(numbering: "(1)")
-  show figure: set figure(numbering: "1.1")
-  show figure.where(kind: image): it => {
-    let sequence = counter(figure.where(kind: image)).at(it.location()).first()
-    let number = float-label(sequence, location: it.location())
-    set figure(numbering: _ => number)
-    it
-  }
-  show figure.where(kind: table): it => {
-    let sequence = counter(figure.where(kind: table)).at(it.location()).first()
-    let number = float-label(sequence, location: it.location())
-    set figure(numbering: _ => number)
-    it
-  }
-  show figure.where(kind: "listing"): it => {
-    let sequence = counter(figure.where(kind: "listing")).at(it.location()).first()
-    let number = float-label(sequence, location: it.location())
-    set figure(numbering: _ => number)
-    it
-  }
+  set figure(numbering: "1")
+  show figure.where(kind: image): set figure(numbering: _ => context float-number(figure.where(kind: image), here()))
+  show figure.where(kind: table): set figure(numbering: _ => context float-number(figure.where(kind: table), here()))
+  show figure.where(kind: "listing"): set figure(numbering: _ => context float-number(figure.where(kind: "listing"), here()))
   set table(stroke: none)
 
   show link: set text(fill: royalblue)
@@ -381,17 +385,17 @@
     heading(level: 1, numbering: none, outlined: false, words.at(lang).contents)
     outline(title: none, depth: 3, indent: auto)
     clear-page()
-    if query(figure.where(kind: image)).len() > 0 {
+    if query(figure.where(kind: image, outlined: true)).len() > 0 {
       heading(level: 1, numbering: none, outlined: false, words.at(lang).figures)
       float-outline(figure.where(kind: image))
       clear-page()
     }
-    if query(figure.where(kind: table)).len() > 0 {
+    if query(figure.where(kind: table, outlined: true)).len() > 0 {
       heading(level: 1, numbering: none, outlined: false, words.at(lang).tables)
       float-outline(figure.where(kind: table))
       clear-page()
     }
-    if query(figure.where(kind: "listing")).len() > 0 {
+    if query(figure.where(kind: "listing", outlined: true)).len() > 0 {
       heading(level: 1, numbering: none, outlined: false, words.at(lang).listings)
       float-outline(figure.where(kind: "listing"))
       clear-page()
@@ -410,6 +414,7 @@
   counter(page).update(1)
   set page(numbering: "1")
   body
+  appendix-mode.update(false)
 
   if glossary.len() > 0 {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).glossary)
@@ -420,6 +425,6 @@
   }
   if bibliography-file != none {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).bibliography)
-    bibliography(bibliography-file, title: none, style: "ieee", full: true)
+    bibliography(bibliography-file, title: none, style: "ieee")
   }
 }

@@ -1,4 +1,4 @@
-#import "template.typ": *
+#import "template.typ": thesis, part, appendix
 
 #let acronyms = (
   ("API", "Application Programming Interface"),
@@ -39,5 +39,4 @@
 
 #part("Appendix")
 #appendix()
-#set heading(numbering: "A.1")
 #include "chapters/appendix.typ"

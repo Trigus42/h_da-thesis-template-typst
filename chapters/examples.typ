@@ -26,7 +26,7 @@ Aenean blandit neque eget nunc euismod ac dignissim enim euismod. Nullam semper,
 
 === Grafiken mit Subfloat
 
-#thesis-table(
+#figure(
   grid(
     columns: (1fr, 1fr), gutter: 6mm,
     image("../assets/qq-plot_gaus_vs_160.pdf", width: 100%),
@@ -34,7 +34,7 @@ Aenean blandit neque eget nunc euismod ac dignissim enim euismod. Nullam semper,
     image("../assets/pdf_gaus_vs_uni_vs_10_40_160.pdf", width: 100%),
     image("../assets/qq-plot_gaus_vs_160.pdf", width: 100%),
   ),
-  caption: [Mit Subfloat lassen sich mehrere Grafiken neben- und untereinander darstellen.],
+  caption: [Mehrere Grafiken lassen sich neben- und untereinander darstellen.],
 )
 
 == Tabellen
