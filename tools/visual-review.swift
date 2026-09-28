@@ -20,21 +20,27 @@ func dataURL(_ path: String) throws -> String {
     return "data:image/png;base64,\(data.base64EncodedString())"
 }
 
-guard CommandLine.arguments.count >= 5 else {
-    fputs("usage: visual-review ENDPOINT API_KEY PROMPT IMAGE...\n", stderr)
+guard CommandLine.arguments.count >= 3 else {
+    fputs("usage: visual-review PROMPT IMAGE...\n", stderr)
+    fputs("environment: OPENAI_BASE_URL, OPENAI_API_KEY, OPENAI_MODEL\n", stderr)
     exit(2)
 }
 
-let endpoint = CommandLine.arguments[1]
-let key = CommandLine.arguments[2]
-let prompt = CommandLine.arguments[3]
-let images = Array(CommandLine.arguments.dropFirst(4))
+let environment = ProcessInfo.processInfo.environment
+guard let endpoint = environment["OPENAI_BASE_URL"],
+      let key = environment["OPENAI_API_KEY"],
+      let model = environment["OPENAI_MODEL"] else {
+    fputs("OPENAI_BASE_URL, OPENAI_API_KEY, and OPENAI_MODEL must be set\n", stderr)
+    exit(2)
+}
+let prompt = CommandLine.arguments[1]
+let images = Array(CommandLine.arguments.dropFirst(2))
 var parts = [Request.Message.Part(type: "text", text: prompt, image_url: nil)]
 for path in images {
     parts.append(Request.Message.Part(type: "image_url", text: nil, image_url: .init(url: try dataURL(path))))
 }
-let payload = Request(model: "gpt-5.6-luna", messages: [.init(role: "user", content: parts)])
-var request = URLRequest(url: URL(string: endpoint + "/chat/completions")!)
+let payload = Request(model: model, messages: [.init(role: "user", content: parts)])
+var request = URLRequest(url: URL(string: endpoint.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/chat/completions")!)
 request.httpMethod = "POST"
 request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
 request.setValue("application/json", forHTTPHeaderField: "Content-Type")

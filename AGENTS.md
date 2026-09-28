@@ -18,7 +18,7 @@
 ## Validation
 
 - Use the pinned toolchain through `mise`; run `mise run check` after changes.
-- Run `mise run compare` for layout changes and inspect `comparison/index.html`, not only aggregate scores.
-- The comparator is intentionally strict, but the template only needs close, polished visual similarity, not pixel-perfect output.
+- For layout changes, render representative pages and inspect them directly; optional visual-review tooling is available under `tools/`.
+- Aim for close, polished visual similarity rather than pixel-perfect output.
 - Check representative pages: title, declaration, abstracts, contents/lists, part pages, chapter openings, appendix floats, glossary, and bibliography.
 - Pay particular attention to visible/clipped numerals, heading placement, text-block margins, page-number leakage, overlaps, and appendix numbering.

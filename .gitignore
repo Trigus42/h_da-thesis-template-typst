@@ -78,7 +78,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,windows
 
 thesis.pdf
-comparison/
 review/
 review-pages/
 .DS_Store
