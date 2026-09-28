@@ -4,9 +4,7 @@
 #import "matter/abbreviations.typ": abbreviations, abbreviations-list
 #import "matter/glossary.typ": glossary, glossary-list
 
-#show: make-glossary
-#show: thm-rules.with(qed-symbol: sym.square.stroked)
-#register-glossary(abbreviations + glossary)
+#register-glossary(abbreviations + glossary, use-key-as-short: false)
 
 #show: thesis.with(
   title: "A Classic Thesis Style",
@@ -22,6 +20,8 @@
   date: "24. September 2026",
   language: "de",
 )
+#show: make-glossary
+#show: thm-rules.with(qed-symbol: sym.square.stroked)
 
 #include "matter/declaration.typ"
 #include "matter/abstract-en.typ"

@@ -2,8 +2,8 @@
 #import "../template.typ": acronym, acronyms-used
 #import "../template.typ": float-number, heading-number-at, part-entry
 #import "@preview/glossarium:0.5.10": make-glossary, register-glossary
+#import "@preview/ctheorems:2.0.0": thm-rules
 
-#show: make-glossary
 #let abbreviations = ((key: "api", short: "API", long: "Application Programming Interface"),)
 #register-glossary(abbreviations)
 
@@ -18,6 +18,8 @@
   date: "28 September 2026",
   language: "en",
 )
+#show: make-glossary
+#show: thm-rules.with(qed-symbol: sym.square.stroked)
 
 #outlines()
 #acronyms-used("Abbreviations", abbreviations)
