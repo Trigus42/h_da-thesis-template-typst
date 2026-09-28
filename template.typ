@@ -1,6 +1,7 @@
 #let maroon = rgb("800000")
 #let halfgray = rgb("8c8c8c")
 #let royalblue = rgb("4169e1")
+#let webbrown = rgb("990000")
 #let body-font = ("Palatino", "Libertinus Serif")
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
 #let appendix-mode = state("hda-thesis.appendix-mode", false)
@@ -84,29 +85,29 @@
 
 #let title-page(data, lang) = {
   page(
-    margin: (top: 18mm, bottom: 19mm, left: 25mm, right: 25mm),
+    margin: (top: 11mm, bottom: 31mm, left: 25mm, right: 25mm),
     header: none,
     footer: none,
   )[
     #align(center)[
-      #v(7mm)
+      #v(2mm)
       #image("assets/logo_h-da_rot.pdf", width: 77mm)
       #v(8mm)
       #text(size: 20.5pt, weight: "bold", data.university)
-      #v(4mm)
+      #v(1mm)
       #text(size: 16pt)[-- #data.faculty --]
       #v(1fr)
       #text(size: 17pt, weight: "bold", data.title)
       #if data.subtitle != none and data.subtitle != "" [#v(3mm)#text(size: 13pt, style: "italic", data.subtitle)]
       #v(1fr)
       #text(size: 14pt, words.at(lang).degree-line)
-      #v(3mm)
+      #v(1mm)
       #text(size: 14pt, data.degree)
       #v(1fr)
       #text(size: 14pt, words.at(lang).submitted)
-      #v(3mm)
+      #v(1mm)
       #text(size: 14pt, weight: "bold", data.author)
-      #v(3mm)
+      #v(1mm)
       #if data.student-id != none and data.student-id != "" [
         #text(size: 11pt)[#words.at(lang).student-id: #data.student-id]
       ]
@@ -136,26 +137,13 @@
   pagebreak()
 }
 
-#let declaration(data, lang) = {
+#let declaration(data, lang, body) = {
   heading(level: 1, numbering: none, outlined: false, words.at(lang).declaration)
-  if lang == "de" [
-    Ich versichere hiermit, dass ich die vorliegende Arbeit selbstständig verfasst und keine anderen als die im Literaturverzeichnis angegebenen Quellen benutzt habe.
-
-    #v(0.8em)
-    Alle Stellen, die wörtlich oder sinngemäß aus veröffentlichten oder noch nicht veröffentlichten Quellen entnommen sind, sind als solche kenntlich gemacht.
-
-    #v(0.8em)
-    Die Zeichnungen oder Abbildungen in dieser Arbeit sind von mir selbst erstellt worden oder mit einem entsprechenden Quellennachweis versehen.
-
-    #v(0.8em)
-    Diese Arbeit ist in gleicher oder ähnlicher Form noch bei keiner anderen Prüfungsbehörde eingereicht worden.
-  ] else [
-    I hereby declare that I have written this thesis independently and have used no sources other than those listed in the bibliography. All passages taken verbatim or in substance from published or unpublished sources are identified as such. This thesis has not been submitted in the same or similar form to another examination authority.
-  ]
+  body
   v(2em)
   emph[#data.location, #data.date]
-  v(17mm)
-  align(right, block(width: 50mm)[#line(length: 100%) #align(center, data.author)])
+  v(10mm)
+  align(right, block(width: 53mm)[#line(length: 100%) #align(center, data.author)])
   clear-page()
 }
 
@@ -260,12 +248,15 @@
       let location = figure-element.location()
       let number = float-number(target, location)
       let caption = figure-element.caption.body
-      link(location)[
-        #figure-element.supplement #number #h(1em) #caption
-        #box(width: 1fr, repeat[.])
-        #context counter(page).display(at: location)
-      ]
+      grid(
+        columns: (auto, 1fr, auto),
+        column-gutter: 0.6em,
+        link(location, text(fill: black, [#figure-element.supplement #number])),
+        link(location, text(fill: black, caption)),
+        link(location, text(fill: royalblue, context counter(page).display(at: location))),
+      )
       parbreak()
+      v(-0.25em)
     }
   }
 }
@@ -275,14 +266,15 @@
     if heading-element.level <= depth {
       let location = heading-element.location()
       let indent = (heading-element.level - 1) * 1.5em
-      link(location)[
-        #h(indent)
+      h(indent)
+      link(location, text(fill: black)[
         #if heading-element.numbering != none [#heading-number-at(location) #h(1em)]
         #heading-element.body
-        #box(width: 1fr, repeat[.])
-        #context counter(page).display(at: location)
-      ]
+      ])
+      box(width: 1fr, repeat[.])
+      link(location, text(fill: royalblue, context counter(page).display(at: location)))
       parbreak()
+      v(-0.25em)
     }
   }
 }
@@ -330,6 +322,7 @@
   location: "Darmstadt",
   date: datetime.today().display("[day]. [month repr:long] [year]"),
   language: "de",
+  declaration-body: none,
   abstract-en: none,
   abstract-de: none,
   bibliography-file: none,
@@ -393,7 +386,7 @@
     footer-descent: 12mm,
   )
   set text(font: body-font, size: 11pt, lang: lang)
-  set par(justify: true, leading: 0.69em)
+  set par(justify: true, leading: 0.58em)
   set heading(numbering: chapter-numbering)
   set list(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set enum(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
@@ -405,29 +398,29 @@
   show figure.where(kind: "listing"): set figure(numbering: _ => context float-number(figure.where(kind: "listing"), here()))
   set table(stroke: none)
 
-  show link: set text(fill: royalblue)
+  show link: set text(fill: webbrown)
   show ref: reference-handler
   show raw: set text(font: mono-font, size: 8.5pt)
   show figure.caption: it => block(above: 5pt, text(size: 9pt, it))
   show heading.where(level: 1): it => {
     pagebreak(weak: true)
-    v(0pt)
-    block(height: 25mm, above: 0pt, below: 0.8em)[
+    v(if it.numbering == none { 8mm } else { 0mm })
+    block(above: 0pt, below: 1.2em)[
       #if it.numbering != none {
         place(
           right + top,
-          dx: 28mm,
-          dy: -6mm,
-          chapter-glyph(heading-number-at(it.location())),
+          dx: 26mm,
+          dy: -20mm,
+          text(font: body-font, size: 70pt, weight: "regular", fill: halfgray, heading-number-at(it.location())),
         )
       }
       #text(font: body-font, size: 12pt, fill: black, tracking: 0.085em, weight: "regular", upper(it.body))
-      #v(0.35em)
-      #line(length: 100%, stroke: 0.45pt + halfgray)
+      #v(0.25em)
+      #line(length: 100%, stroke: 0.55pt + halfgray)
     ]
   }
   show heading.where(level: 2): it => block(above: 1.4em, below: 0.9em)[
-    #tracked-small-caps[#if it.numbering != none [#heading-number-at(it.location()) #h(1em)]#it.body]
+    #text(size: 10pt, tracking: 0.11em, weight: "regular", upper[#if it.numbering != none [#heading-number-at(it.location()) #h(1em)]#it.body])
   ]
   show heading.where(level: 3): it => block(above: 1.1em, below: 0.7em)[
     #text(style: "italic")[#if it.numbering != none [#heading-number-at(it.location()) #h(1em)]#it.body]
@@ -438,7 +431,10 @@
 
   title-page(data, lang)
   title-back(data)
-  if show-declaration { declaration(data, lang) }
+  if show-declaration {
+    assert(declaration-body != none, message: "declaration-body is required when show-declaration is true")
+    declaration(data, lang, declaration-body)
+  }
   if abstract-en != none {
     unnumbered-page("Abstract", { set text(lang: "en"); abstract-en })
   }
@@ -461,6 +457,14 @@
       align(alignment, tracked-small-caps(chapter-title, size: 8pt, fill: rgb("444444")))
       v(2pt)
       line(length: 100%, stroke: 0.35pt + rgb("aaaaaa"))
+    }
+  }
+
+  let page-number-footer = context {
+    let page-number = here().page()
+    let headings-on-page = query(heading.where(level: 1)).filter(it => it.location().page() == page-number)
+    if headings-on-page.len() == 0 {
+      align(center, counter(page).display("1"))
     }
   }
 
@@ -487,22 +491,28 @@
   if acronyms.len() > 0 {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).acronyms)
     table(
-      columns: (27mm, 1fr),
+      columns: (35mm, 1fr),
       inset: (x: 0pt, y: 4pt),
-      ..acronyms.map(x => (tracked-small-caps(x.at(0)), x.at(1))).flatten(),
+      ..acronyms.map(x => (box(tracked-small-caps(x.at(0))), x.at(1))).flatten(),
     )
     clear-page()
   }
 
   counter(page).update(1)
-  set page(numbering: "1", header: running-header)
+  set page(numbering: none, header: running-header, footer: page-number-footer)
   body
   appendix-mode.update(false)
 
   if glossary.len() > 0 {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).glossary)
     for entry in glossary {
-      block(below: 0.75em)[#strong(entry.at(0)) #h(0.6em) #entry.at(1)]
+      grid(
+        columns: (43mm, 1fr),
+        column-gutter: 2mm,
+        row-gutter: 0.75em,
+        text(hyphenate: false, strong(entry.at(0))),
+        entry.at(1),
+      )
     }
     clear-page()
   }
