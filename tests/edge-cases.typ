@@ -1,5 +1,5 @@
-#import "../template.typ": thesis, mainmatter, outlines, appendix, thesis-listing, thesis-table
-#import "../template.typ": float-number, heading-number-at
+#import "../template.typ": thesis, mainmatter, outlines, appendix, part, thesis-listing, thesis-table
+#import "../template.typ": float-number, heading-number-at, part-entry
 
 #show: thesis.with(
   title: "Edge Cases",
@@ -15,6 +15,8 @@
 
 #outlines()
 #mainmatter()
+
+#part("Body")
 
 // Compile-time checks for the numbering assigned at each labeled element. These
 // resolve the number at the target's own location, so a regression in
@@ -68,6 +70,7 @@
 
 #figure(rect(width: 20mm, height: 10mm), caption: [Second chapter figure])
 
+#part("Appendix")
 #appendix()
 
 = Appendix Chapter <appendix-chapter>
@@ -101,3 +104,18 @@ Suppressed supplement: #ref(<first-figure>, supplement: none).
 #expect-float(<thesis-table-ref>, table, "1.2")
 #expect-float(<thesis-listing-ref>, "listing", "1.1")
 #expect-float(<appendix-figure>, image, "A.1")
+
+// Parts must be recorded in reading order with roman numerals so the contents
+// outline can interleave them; a regression here breaks the part rows in the ToC.
+#context {
+  let parts = query(part-entry).map(it => (it.value.number, it.value.title))
+  assert.eq(parts, (("I", "Body"), ("II", "Appendix")), message: "part entries: " + repr(parts))
+}
+
+// The running header must actually be bound to the body pages (the defect that
+// dropped every header and folio bound it only inside a non-propagating block;
+// an unbound header stays at its `auto` default rather than our function).
+#context assert(
+  page.header not in (auto, none),
+  message: "running header is not bound on body pages: " + repr(page.header),
+)

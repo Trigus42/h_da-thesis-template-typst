@@ -8,8 +8,6 @@
 #let thesis-language = state("hda-thesis.language", "de")
 #let used-acronyms = state("hda-thesis.used-acronyms", ())
 #let thesis-data = state("hda-thesis.data", none)
-#let running-header = state("hda-thesis.running-header", none)
-#let page-number-footer = state("hda-thesis.page-number-footer", none)
 
 #let words = (
   de: (
@@ -154,13 +152,20 @@
   short
 }
 
-#let mainmatter() = context {
+// Begin the numbered body: restart pagination. The running header is bound once
+// on the global page setup in `thesis`; it renders only on the body pages of
+// numbered chapters, so front matter (queried before any numbered chapter) stays
+// bare. Restarting the counter here makes the part divider page 1 and the first
+// chapter page 2, as in the reference.
+#let mainmatter() = {
   clear-page()
   counter(page).update(1)
-  set page(numbering: none, header: running-header.get(), footer: page-number-footer.get())
 }
 
 #let part-counter = counter("hda-thesis.part")
+// Marker emitted at each part so `heading-outline` can list the parts in reading
+// order; parts are not headings, so they are recorded separately here.
+#let part-entry = <hda-thesis.part-entry>
 #let part(title, lang: auto) = {
   assert(type(title) == str and title.trim() != "", message: "part title must be a non-empty string")
   if lang != auto {
@@ -168,6 +173,7 @@
   }
   clear-page()
   part-counter.step()
+  context [#metadata((number: part-counter.display("I"), title: title))#part-entry]
   page(header: none, footer: none)[
     #v(0.31fr)
     #align(center)[
@@ -209,6 +215,36 @@
   let numbers = counter(heading).at(location)
   let in-appendix = appendix-mode.at(location)
   format-chapter-number(in-appendix, ..numbers)
+}
+
+// Running header for body pages: the current section label and title in spaced
+// small caps at the top-right, with the page number at the far right on the same
+// line and no rule, matching the reference. It is suppressed on chapter and
+// unnumbered-section openings (whose heading sits on the page) and on the pages
+// of unnumbered sections such as the glossary and bibliography, which carry no
+// running title. The running section mirrors the reference: the first numbered
+// section that begins on the page, or the most recent one before it.
+#let running-header = context {
+  let page-number = here().page()
+  let opens-here = query(heading.where(level: 1)).any(it => it.location().page() == page-number)
+  if opens-here { return }
+  let chapters-before = query(heading.where(level: 1)).filter(it => it.location().page() <= page-number)
+  let current-chapter = chapters-before.at(-1, default: none)
+  if current-chapter == none or current-chapter.numbering == none { return }
+  let sections = query(heading.where(level: 2).after(current-chapter.location())).filter(it => it.numbering != none)
+  let sections-on-page = sections.filter(it => it.location().page() == page-number)
+  let sections-before = sections.filter(it => it.location().page() < page-number)
+  let running-heading = if sections-on-page.len() > 0 {
+    sections-on-page.first()
+  } else {
+    sections-before.at(-1, default: current-chapter)
+  }
+  let mark = [#heading-number-at(running-heading.location()) #running-heading.body]
+  align(right)[
+    #tracked-small-caps(mark, size: 8pt, fill: rgb("444444"))
+    #h(1.2em)
+    #text(font: body-font, size: 9pt, fill: rgb("444444"), counter(page).display("1"))
+  ]
 }
 
 #let float-number(target, location) = {
@@ -265,7 +301,9 @@
         columns: (auto, 1fr, auto),
         column-gutter: 0.6em,
         link(location, text(fill: black, [#figure-element.supplement #number])),
-        link(location, text(fill: black, caption)),
+        // Caption followed by a dotted leader that fills the row, matching the
+        // table of contents and the reference float lists.
+        link(location, text(fill: black, caption)) + h(0.6em) + box(width: 1fr, repeat[.]),
         link(location, text(fill: royalblue, context counter(page).display(at: location))),
       )
       parbreak()
@@ -322,14 +360,22 @@
 }
 
 #let heading-outline(depth: 3) = {
-  for heading-element in query(heading.where(outlined: true)) {
-    if heading-element.level <= depth {
-      let location = heading-element.location()
-      let indent = (heading-element.level - 1) * 1.5em
+  // Query parts and outlined headings together so both appear in reading order.
+  for element in query(selector(heading.where(outlined: true)).or(part-entry)) {
+    if element.func() == metadata {
+      // Part row: red numeral and title, no leader and no page number, matching
+      // the reference. A little extra space sets it off from the chapters.
+      v(0.5em)
+      text(fill: maroon)[#element.value.number #h(1em) #element.value.title]
+      parbreak()
+      v(-0.25em)
+    } else if element.level <= depth {
+      let location = element.location()
+      let indent = (element.level - 1) * 1.5em
       h(indent)
       link(location, text(fill: black)[
-        #if heading-element.numbering != none [#heading-number-at(location) #h(1em)]
-        #heading-element.body
+        #if element.numbering != none [#heading-number-at(location) #h(1em)]
+        #element.body
       ])
       box(width: 1fr, repeat[.])
       link(location, text(fill: royalblue, context counter(page).display(at: location)))
@@ -458,7 +504,7 @@
     paper: "a4",
     margin: (top: 27mm, bottom: 24mm, left: 42mm, right: 38mm),
     numbering: none,
-    number-align: center,
+    header: running-header,
     header-ascent: 12mm,
     footer-descent: 12mm,
   )
@@ -508,31 +554,6 @@
 
   title-page(data, lang)
   title-back(data)
-
-  running-header.update(context {
-    let page-number = here().page()
-    let chapters-before = query(heading.where(level: 1).before(here()))
-    let current-chapter = chapters-before.at(-1, default: none)
-    let is-chapter-opening = query(heading.where(level: 1).after(here())).any(it => it.location().page() == page-number)
-    // Suppress the header on chapter openings and on the pages of unnumbered
-    // sections such as the glossary and bibliography, whose headings carry no
-    // numbering and therefore no running title.
-    if current-chapter != none and current-chapter.numbering != none and not is-chapter-opening {
-      let chapter-title = current-chapter.body
-      let alignment = if calc.odd(page-number) { right } else { left }
-      align(alignment, tracked-small-caps(chapter-title, size: 8pt, fill: rgb("444444")))
-      v(2pt)
-      line(length: 100%, stroke: 0.35pt + rgb("aaaaaa"))
-    }
-  })
-
-  page-number-footer.update(context {
-    let page-number = here().page()
-    let headings-on-page = query(heading.where(level: 1)).filter(it => it.location().page() == page-number)
-    if headings-on-page.len() == 0 {
-      align(center, counter(page).display("1"))
-    }
-  })
 
   body
   appendix-mode.update(false)
