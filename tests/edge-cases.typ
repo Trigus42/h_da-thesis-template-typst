@@ -1,6 +1,6 @@
 #import "../template.typ": thesis, mainmatter, outlines, appendix, part, thesis-listing, thesis-table
 #import "../template.typ": acronym, acronyms-used, glossary-used
-#import "../template.typ": float-number, heading-number-at, part-entry
+#import "../template.typ": float-number, heading-number-at, page-number-at, part-entry
 #import "@preview/glossarium:0.5.10": make-glossary, register-glossary
 #import "@preview/ctheorems:2.0.0": thm-rules
 
@@ -16,6 +16,8 @@
   location: "Test Location",
   date: "28 September 2026",
   language: "en",
+  description: "Template edge-case validation.",
+  keywords: ("Typst", "test"),
 )
 #show: make-glossary
 #show: thm-rules.with(qed-symbol: sym.square.stroked)
@@ -157,6 +159,13 @@ Suppressed supplement: #ref(<first-figure>, supplement: none).
   let first-chapter = query(<first-chapter>).first()
   assert.eq(counter(page).at(contents.location()), (1,), message: "front matter page counter did not start at one")
   assert.eq(counter(page).at(first-chapter.location()), (3,), message: "main matter page counter did not restart at one")
+  assert.eq(str(page-number-at(contents.location())), "i", message: "front matter page reference is not Roman")
+  assert.eq(str(page-number-at(first-chapter.location())), "3", message: "main matter page reference is not Arabic")
+}
+
+#context {
+  assert.eq(document.description, [Template edge-case validation.])
+  assert.eq(document.keywords, ("Typst", "test"))
 }
 
 #context {

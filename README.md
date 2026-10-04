@@ -36,7 +36,18 @@ To reorder or omit a section, move or comment out its `#include` in `thesis.typ`
 
 The line above the degree on the title page is omitted unless you set `degree-line` in `thesis.with(...)`. Pass `degree-line: auto` for the language default, or a string to set custom wording; omitting the parameter (like `second-supervisor`) leaves the line out.
 
+The reusable document options in `thesis.with(...)` include:
+
+- `two-sided`: uses mirrored `inside` and `outside` margins for duplex printing.
+- `open-right`: starts parts and numbered chapters on odd pages, inserting blank pages when necessary; this requires `two-sided: true`.
+- `line-spacing`: controls line spacing and defaults to the reference template's `1.5` setting.
+- `description` and `keywords`: populate the corresponding PDF metadata fields.
+
+`#outlines(figures: ..., tables: ..., listings: ...)` controls the three float lists independently. Each enabled list is still omitted automatically when no matching figures exist.
+
 `template.typ` provides the reusable pieces: `thesis` (metadata, page layout, German/English labels for the outlines and automatic labels), `mainmatter` (starts Arabic body pagination and running headers), `outlines` (contents and float lists), `part`, `appendix`, `unnumbered-heading`, `thesis-info`, `acronym`/`acronyms-used`, `glossary-used`, `margin-note`, and `thesis-table`/`thesis-listing` for captioned tables and source listings (both forward native `figure` options such as `placement` and `outlined`). The front matter uses Roman page numbers. Theorem and proof environments come from the pinned `ctheorems` package imported in `thesis.typ` and the chapter that uses them.
+
+Subfigures use the pinned `subpar` package. Its `subpar.grid` helper provides individual captions, labels, and references while retaining one parent figure and caption.
 
 Start appendices with `#appendix()`. It resets chapter numbering and switches heading, outline, and float labels to alphabetic chapter prefixes.
 

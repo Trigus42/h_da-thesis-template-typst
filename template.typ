@@ -9,6 +9,8 @@
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
 #let appendix-mode = state("hda-thesis.appendix-mode", false)
 #let mainmatter-mode = state("hda-thesis.mainmatter-mode", false)
+#let open-right-mode = state("hda-thesis.open-right-mode", false)
+#let opening-entry = <hda-thesis.opening-entry>
 #let thesis-language = state("hda-thesis.language", "de")
 #let thesis-data = state("hda-thesis.data", none)
 
@@ -79,6 +81,9 @@
 )
 
 #let clear-page() = pagebreak(weak: true)
+#let clear-opening-page() = context {
+  pagebreak(weak: true, to: if open-right-mode.get() { "odd" } else { none })
+}
 
 // Start an unnumbered top-level section on a fresh page. Content files own
 // whether their section should also appear in the contents and PDF outline.
@@ -105,7 +110,7 @@
   )[
     #align(center)[
       #v(2mm)
-      #image("assets/logo_h-da_rot.pdf", width: 77mm)
+      #image("assets/logo_fbi_eut.pdf", width: 100%)
       #v(8mm)
       #text(size: 20.5pt, weight: "bold", data.university)
       #v(1mm)
@@ -168,10 +173,12 @@
   mainmatter-mode.update(true)
 }
 
-#let page-numbering(number, ..rest) = context numbering(
-  if mainmatter-mode.get() { "1" } else { "i" },
-  number,
-)
+#let page-numbering(number, ..rest) = context if not (
+  open-right-mode.get()
+    and query(opening-entry).any(it => it.location().page() == here().page() + 1)
+) {
+  numbering(if mainmatter-mode.get() { "1" } else { "i" }, number)
+}
 
 #let part-counter = counter("hda-thesis.part")
 // Marker emitted at each part so `heading-outline` can list the parts in reading
@@ -182,7 +189,8 @@
   if lang != auto {
     assert(lang in ("de", "en"), message: "part language must be either \"de\" or \"en\"")
   }
-  clear-page()
+  clear-opening-page()
+  [#metadata(none)#opening-entry]
   part-counter.step()
   context [#metadata((number: part-counter.display("I"), title: title))#part-entry]
   page(header: none, footer: none)[
@@ -228,6 +236,11 @@
   format-chapter-number(in-appendix, ..numbers)
 }
 
+#let page-number-at(location) = numbering(
+  if mainmatter-mode.at(location) { "1" } else { "i" },
+  ..counter(page).at(location),
+)
+
 // Running header for body pages: the current section label and title in spaced
 // small caps at the top-right, with the page number at the far right on the same
 // line and no rule, matching the reference. It is suppressed on chapter and
@@ -237,6 +250,7 @@
 // section that begins on the page, or the most recent one before it.
 #let running-header = context {
   let page-number = here().page()
+  if open-right-mode.get() and query(opening-entry).any(it => it.location().page() == page-number + 1) { return }
   let opens-here = query(heading.where(level: 1)).any(it => it.location().page() == page-number)
   if opens-here { return }
   let chapters-before = query(heading.where(level: 1)).filter(it => it.location().page() <= page-number)
@@ -322,7 +336,7 @@
         // Caption followed by a dotted leader that fills the row, matching the
         // table of contents and the reference float lists.
         link(location, text(fill: black, caption)) + h(0.6em) + box(width: 1fr, repeat[.]),
-        link(location, text(fill: royalblue, context counter(page).display(at: location))),
+        link(location, text(fill: royalblue, page-number-at(location))),
       )
       parbreak()
       v(-0.25em)
@@ -394,29 +408,29 @@
         #element.body
       ])
       box(width: 1fr, repeat[.])
-      link(location, text(fill: royalblue, context counter(page).display(at: location)))
+      link(location, text(fill: royalblue, page-number-at(location)))
       parbreak()
       v(-0.25em)
     }
   }
 }
 
-#let outlines() = context {
+#let outlines(figures: true, tables: true, listings: true) = context {
   let lang = thesis-language.get()
   heading(level: 1, numbering: none, outlined: false, words.at(lang).contents)
   heading-outline(depth: 3)
   clear-page()
-  if query(figure.where(kind: image, outlined: true)).len() > 0 {
+  if figures and query(figure.where(kind: image, outlined: true)).len() > 0 {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).figures)
     float-outline(figure.where(kind: image))
     clear-page()
   }
-  if query(figure.where(kind: table, outlined: true)).len() > 0 {
+  if tables and query(figure.where(kind: table, outlined: true)).len() > 0 {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).tables)
     float-outline(figure.where(kind: table))
     clear-page()
   }
-  if query(figure.where(kind: "listing", outlined: true)).len() > 0 {
+  if listings and query(figure.where(kind: "listing", outlined: true)).len() > 0 {
     heading(level: 1, numbering: none, outlined: false, words.at(lang).listings)
     float-outline(figure.where(kind: "listing"))
     clear-page()
@@ -459,6 +473,11 @@
   location: "Darmstadt",
   date: datetime.today().display("[day]. [month repr:long] [year]"),
   language: "de",
+  two-sided: false,
+  open-right: false,
+  line-spacing: 1.5,
+  description: none,
+  keywords: (),
   body,
 ) = {
   assert(language in ("de", "en"), message: "language must be either \"de\" or \"en\"")
@@ -485,6 +504,13 @@
     degree-line == auto or degree-line == none or type(degree-line) == str,
     message: "degree-line must be auto, none, or a string",
   )
+  assert(type(two-sided) == bool, message: "two-sided must be a boolean")
+  assert(type(open-right) == bool, message: "open-right must be a boolean")
+  assert(not open-right or two-sided, message: "open-right requires two-sided: true")
+  assert(type(line-spacing) == int or type(line-spacing) == float, message: "line-spacing must be a number")
+  assert(line-spacing > 0, message: "line-spacing must be positive")
+  assert(description == none or type(description) == str or type(description) == content, message: "description must be content, a string, or none")
+  assert(type(keywords) == str or type(keywords) == array, message: "keywords must be a string or array")
   let lang = language
   // auto keeps the language default line; none omits it; a string overrides it.
   let resolved-degree-line = if degree-line == auto { words.at(lang).degree-line } else { degree-line }
@@ -503,22 +529,28 @@
     date: date,
   )
 
-  set document(title: title, author: (author,))
+  set document(title: title, author: (author,), description: description, keywords: keywords)
   thesis-language.update(lang)
   thesis-data.update(data)
   appendix-mode.update(false)
   mainmatter-mode.update(false)
+  open-right-mode.update(open-right)
   part-counter.update(0)
   set page(
     paper: "a4",
-    margin: (top: 27mm, bottom: 24mm, left: 42mm, right: 38mm),
+    margin: if two-sided {
+      (top: 27mm, bottom: 24mm, inside: 42mm, outside: 38mm)
+    } else {
+      (top: 27mm, bottom: 24mm, left: 42mm, right: 38mm)
+    },
+    binding: left,
     numbering: none,
     header: running-header,
     header-ascent: 12mm,
     footer-descent: 12mm,
   )
   set text(font: body-font, size: 11pt, lang: lang)
-  set par(justify: true, leading: 0.58em)
+  set par(justify: true, leading: (line-spacing - 1) * 1em)
   set heading(numbering: chapter-numbering)
   set list(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
   set enum(indent: 1.2em, body-indent: 0.65em, spacing: 0.55em)
@@ -536,7 +568,12 @@
   show raw: set text(font: mono-font, size: 8.5pt)
   show figure.caption: it => block(above: 5pt, text(size: 9pt, it))
   show heading.where(level: 1): it => {
-    pagebreak(weak: true)
+    if it.numbering == none {
+      pagebreak(weak: true)
+    } else {
+      clear-opening-page()
+      [#metadata(none)#opening-entry]
+    }
     v(if it.numbering == none { 8mm } else { 0mm })
     block(above: 0pt, below: 1.2em)[
       #if it.numbering != none {

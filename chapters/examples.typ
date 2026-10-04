@@ -1,6 +1,7 @@
 #import "../template.typ": thesis-listing, thesis-table
 #import "@preview/glossarium:0.5.10": gls
 #import "@preview/ctheorems:2.0.0": thm-themes
+#import "@preview/subpar:0.2.2"
 #import thm-themes.ams: theorem, proof
 
 = Ein weiteres Kapitel
@@ -29,16 +30,18 @@ Aenean blandit neque eget nunc euismod ac dignissim enim euismod. Nullam semper,
 
 === Grafiken mit Subfloat
 
-#figure(
-  grid(
-    columns: (1fr, 1fr), gutter: 6mm,
-    image("../assets/qq-plot_gaus_vs_160.pdf", width: 100%),
-    image("../assets/pdf_gaus_vs_uni_vs_10_40_160.pdf", width: 100%),
-    image("../assets/pdf_gaus_vs_uni_vs_10_40_160.pdf", width: 100%),
-    image("../assets/qq-plot_gaus_vs_160.pdf", width: 100%),
-  ),
+#subpar.grid(
+  figure(image("../assets/qq-plot_gaus_vs_160.pdf", width: 100%), caption: [Asia personas duo.]), <subfigure-asia>,
+  figure(image("../assets/pdf_gaus_vs_uni_vs_10_40_160.pdf", width: 100%), caption: [Pan ma signo.]), <subfigure-pan>,
+  figure(image("../assets/pdf_gaus_vs_uni_vs_10_40_160.pdf", width: 100%), caption: [Methodicamente o uno.]), <subfigure-method>,
+  figure(image("../assets/qq-plot_gaus_vs_160.pdf", width: 100%), caption: [Titulo debitas.]), <subfigure-title>,
+  columns: (1fr, 1fr),
+  column-gutter: 6mm,
   caption: [Mehrere Grafiken lassen sich neben- und untereinander darstellen.],
+  label: <subfigures>,
 )
+
+Die Teilabbildungen @subfigure-asia und @subfigure-pan können einzeln referenziert werden.
 
 == Tabellen
 

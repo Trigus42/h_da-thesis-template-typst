@@ -19,6 +19,11 @@
   location: "Darmstadt",
   date: "24. September 2026",
   language: "de",
+  two-sided: false,
+  open-right: false,
+  line-spacing: 1.5,
+  description: "Bachelor thesis template for the Hochschule Darmstadt Faculty of Computer Science.",
+  keywords: ("thesis", "Typst", "Hochschule Darmstadt"),
 )
 #show: make-glossary
 #show: thm-rules.with(qed-symbol: sym.square.stroked)
@@ -28,7 +33,7 @@
 // #include "matter/blocking-notice.typ"
 #include "matter/abstract-en.typ"
 #include "matter/abstract-de.typ"
-#outlines()
+#outlines(figures: true, tables: true, listings: true)
 #abbreviations-list()
 
 #mainmatter()

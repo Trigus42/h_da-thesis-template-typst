@@ -11,6 +11,7 @@ run = "typst watch thesis.typ thesis.pdf"
 run = [
   "typst compile --diagnostic-format short thesis.typ thesis.pdf",
   "typst compile --root . --diagnostic-format short tests/edge-cases.typ /tmp/hda-thesis-edge-cases.pdf",
+  "typst compile --root . --diagnostic-format short tests/two-sided.typ /tmp/hda-thesis-two-sided.pdf",
 ]
 
 [tasks.update-template]
