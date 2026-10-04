@@ -2,6 +2,9 @@
 
 An independent native Typst thesis template informed by [Trigus42/h_da-thesis-template](https://github.com/Trigus42/h_da-thesis-template), a fork of [mbredel/thesis-template](https://github.com/mbredel/thesis-template). It implements the layout directly in Typst rather than using a generic ClassicThesis package.
 
+> [!IMPORTANT]
+> **No Support** — This project is built and maintained strictly for my personal work. It is shared in case it is useful to others, but I do not offer technical support, troubleshooting, or feature maintenance.
+
 ## Build
 
 ```sh
