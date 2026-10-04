@@ -24,6 +24,8 @@
 #show: thm-rules.with(qed-symbol: sym.square.stroked)
 
 #include "matter/declaration.typ"
+// Uncomment this include if the thesis is subject to a blocking notice.
+// #include "matter/blocking-notice.typ"
 #include "matter/abstract-en.typ"
 #include "matter/abstract-de.typ"
 #outlines()

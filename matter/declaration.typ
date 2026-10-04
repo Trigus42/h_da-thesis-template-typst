@@ -1,6 +1,6 @@
 #import "../template.typ": unnumbered-heading, thesis-info
 
-#unnumbered-heading("Erklärung")
+#unnumbered-heading("Eigenständigkeitserklärung")
 
 Ich versichere hiermit, dass ich die vorliegende Arbeit selbstständig verfasst und keine anderen als die im Literaturverzeichnis angegebenen Quellen benutzt habe.
 

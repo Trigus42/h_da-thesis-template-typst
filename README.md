@@ -26,6 +26,7 @@ Set thesis metadata in `thesis.with(...)` at the top of `thesis.typ`; the body o
 Each front- and back-matter section owns its own title and layout in its file under `matter/`, and `thesis.typ` decides whether it appears before or after the chapters. Edit each section where it is read:
 
 - `declaration.typ` renders its heading, body, and signature block; `#thesis-info(data => ...)` supplies the author, location, and date.
+- `blocking-notice.typ` contains the optional confidentiality notice; uncomment its include in `thesis.typ` when required.
 - `abstract-en.typ` and `abstract-de.typ` set their own language and heading.
 - `abbreviations.typ` defines the acronyms and prints the ones referenced with `#acronym("API")`.
 - `glossary.typ` defines and prints the glossary.
@@ -35,7 +36,7 @@ To reorder or omit a section, move or comment out its `#include` in `thesis.typ`
 
 The line above the degree on the title page is omitted unless you set `degree-line` in `thesis.with(...)`. Pass `degree-line: auto` for the language default, or a string to set custom wording; omitting the parameter (like `second-supervisor`) leaves the line out.
 
-`template.typ` provides the reusable pieces: `thesis` (metadata, page layout, German/English labels for the outlines and automatic labels), `mainmatter` (starts body pagination and running headers), `outlines` (contents and float lists), `part`, `appendix`, `unnumbered-heading`, `thesis-info`, `acronym`/`acronyms-used`, `definition-list`, `margin-note`, `theorem`/`proof`, and `thesis-table`/`thesis-listing` for captioned tables and source listings (both forward native `figure` options such as `placement` and `outlined`).
+`template.typ` provides the reusable pieces: `thesis` (metadata, page layout, German/English labels for the outlines and automatic labels), `mainmatter` (starts Arabic body pagination and running headers), `outlines` (contents and float lists), `part`, `appendix`, `unnumbered-heading`, `thesis-info`, `acronym`/`acronyms-used`, `glossary-used`, `margin-note`, and `thesis-table`/`thesis-listing` for captioned tables and source listings (both forward native `figure` options such as `placement` and `outlined`). The front matter uses Roman page numbers. Theorem and proof environments come from the pinned `ctheorems` package imported in `thesis.typ` and the chapter that uses them.
 
 Start appendices with `#appendix()`. It resets chapter numbering and switches heading, outline, and float labels to alphabetic chapter prefixes.
 

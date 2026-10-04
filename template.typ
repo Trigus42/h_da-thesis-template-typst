@@ -4,9 +4,11 @@
 #let halfgray = rgb("8c8c8c")
 #let royalblue = rgb("4169e1")
 #let webbrown = rgb("990000")
+#let webgreen = rgb("008000")
 #let body-font = ("Palatino", "Libertinus Serif")
 #let mono-font = ("DejaVu Sans Mono", "Courier New")
 #let appendix-mode = state("hda-thesis.appendix-mode", false)
+#let mainmatter-mode = state("hda-thesis.mainmatter-mode", false)
 #let thesis-language = state("hda-thesis.language", "de")
 #let thesis-data = state("hda-thesis.data", none)
 
@@ -32,10 +34,10 @@
   ),
   en: (
     degree-line: "Thesis submitted in partial fulfillment of the requirements for the degree",
-    submitted: "submitted by",
-    student-id: "Student ID",
-    first: "Supervisor",
-    second: "Second supervisor",
+    submitted: "by",
+    student-id: "Matriculation number",
+    first: "First Examiner",
+    second: "Second Examiner",
     contents: "Contents",
     figures: "List of Figures",
     tables: "List of Tables",
@@ -78,12 +80,11 @@
 
 #let clear-page() = pagebreak(weak: true)
 
-// Start an unnumbered, unlisted top-level section on a fresh page. Content
-// files (declaration, abstracts, glossary, bibliography, ...) call this to open
-// their own section, so section titles live with the content rather than here.
-#let unnumbered-heading(title) = {
+// Start an unnumbered top-level section on a fresh page. Content files own
+// whether their section should also appear in the contents and PDF outline.
+#let unnumbered-heading(title, outlined: false, bookmarked: auto) = {
   clear-page()
-  heading(level: 1, numbering: none, outlined: false, title)
+  heading(level: 1, numbering: none, outlined: outlined, bookmarked: bookmarked, title)
 }
 
 #let translated(key) = context words.at(thesis-language.get()).at(key)
@@ -164,7 +165,13 @@
 #let mainmatter() = {
   clear-page()
   counter(page).update(1)
+  mainmatter-mode.update(true)
 }
+
+#let page-numbering(number, ..rest) = context numbering(
+  if mainmatter-mode.get() { "1" } else { "i" },
+  number,
+)
 
 #let part-counter = counter("hda-thesis.part")
 // Marker emitted at each part so `heading-outline` can list the parts in reading
@@ -500,6 +507,7 @@
   thesis-language.update(lang)
   thesis-data.update(data)
   appendix-mode.update(false)
+  mainmatter-mode.update(false)
   part-counter.update(0)
   set page(
     paper: "a4",
@@ -522,7 +530,8 @@
   show figure.where(kind: "listing"): set figure(numbering: _ => context float-number(figure.where(kind: "listing"), here()))
   set table(stroke: none)
 
-  show link: set text(fill: webbrown)
+  show link: it => text(fill: if type(it.dest) == str { webbrown } else { royalblue }, it)
+  show cite: it => text(fill: webgreen, it)
   show ref: reference-handler
   show raw: set text(font: mono-font, size: 8.5pt)
   show figure.caption: it => block(above: 5pt, text(size: 9pt, it))
@@ -555,6 +564,9 @@
 
   title-page(data, lang)
   title-back(data)
+
+  counter(page).update(1)
+  set page(numbering: page-numbering)
 
   body
   appendix-mode.update(false)

@@ -150,6 +150,15 @@ Suppressed supplement: #ref(<first-figure>, supplement: none).
   message: "running header is not bound on body pages: " + repr(page.header),
 )
 
+// Front matter starts its logical page counter at one. Main matter restarts at
+// one on the part divider, so the first chapter is page three in this fixture.
+#context {
+  let contents = query(heading.where(outlined: false)).first()
+  let first-chapter = query(<first-chapter>).first()
+  assert.eq(counter(page).at(contents.location()), (1,), message: "front matter page counter did not start at one")
+  assert.eq(counter(page).at(first-chapter.location()), (3,), message: "main matter page counter did not restart at one")
+}
+
 #context {
   let second-chapter = query(<second-chapter>).first()
   let appendix-chapter = query(<appendix-chapter>).first()
