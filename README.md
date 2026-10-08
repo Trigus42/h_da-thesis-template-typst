@@ -35,7 +35,7 @@ Each front- and back-matter section owns its own title and layout in its file un
 - `glossary.typ` defines and prints the glossary.
 - `bibliography.typ` prints the bibliography from `bibliography.bib`.
 
-To reorder or omit a section, move or comment out its `#include` in `thesis.typ`. The acronym list only shows acronyms actually referenced through `#acronym(...)`; referencing an undefined acronym is a compile error.
+To reorder or omit a section, move or comment out its `#include` in `thesis.typ`. The abbreviation and glossary lists only show entries actually referenced through Glossarium; referencing an undefined entry is a compile error.
 
 The line above the degree on the title page is omitted unless you set `degree-line` in `thesis.with(...)`. Pass `degree-line: auto` for the language default, or a string to set custom wording; omitting the parameter (like `second-supervisor`) leaves the line out.
 

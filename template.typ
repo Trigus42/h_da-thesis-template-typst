@@ -352,15 +352,17 @@
     print-glossary(
       acronyms,
       user-print-gloss: (entry, ..args) => context {
-        let first-use = get-entry-back-references(entry).first().dest
-        grid(
-          columns: (35mm, 1fr),
-          column-gutter: 0pt,
-          row-gutter: 0pt,
-          inset: (x: 0pt, y: 4pt),
-          box(link(first-use, tracked-small-caps(entry.short))),
-          entry.long,
-        )
+        let back-references = get-entry-back-references(entry)
+        if back-references.len() > 0 {
+          grid(
+            columns: (35mm, 1fr),
+            column-gutter: 0pt,
+            row-gutter: 0pt,
+            inset: (x: 0pt, y: 4pt),
+            box(link(back-references.first().dest, tracked-small-caps(entry.short))),
+            entry.long,
+          )
+        }
       },
     )
     clear-page()
@@ -375,14 +377,16 @@
     print-glossary(
       entries,
       user-print-gloss: (entry, ..args) => context {
-        let first-use = get-entry-back-references(entry).first().dest
-        grid(
-          columns: (42mm, 1fr),
-          column-gutter: 3mm,
-          row-gutter: 0.75em,
-          align(left + top, par(justify: false, text(hyphenate: false, link(first-use, strong(entry.long))))),
-          align(left + top, par(justify: false, text(hyphenate: false, entry.description))),
-        )
+        let back-references = get-entry-back-references(entry)
+        if back-references.len() > 0 {
+          grid(
+            columns: (42mm, 1fr),
+            column-gutter: 3mm,
+            row-gutter: 0.75em,
+            align(left + top, par(justify: false, text(hyphenate: false, link(back-references.first().dest, strong(entry.long))))),
+            align(left + top, par(justify: false, text(hyphenate: false, entry.description))),
+          )
+        }
       },
     )
     clear-page()
