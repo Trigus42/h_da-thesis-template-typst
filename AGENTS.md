@@ -1,14 +1,20 @@
 # Agent Guidance
 
-## Project Context
+## Document-Specific Guidance
+
+<!-- Add rules for this thesis document here after copying the template. -->
+
+## Template Guidance
+
+### Project Context
 
 - This repository contains a polished native Typst thesis template informed by [Trigus42/thesis-template](https://github.com/Trigus42/thesis-template), a fork of [mbredel/thesis-template](https://github.com/mbredel/thesis-template). It is not a generic ClassicThesis implementation.
-- Apply this guidance when editing the reusable template or a thesis document built with it.
+- The guidance under "Template Guidance" concerns the reusable template. It is not document-specific guidance for a thesis created from this repository.
 - Use the Trigus42 fork as the direct visual and behavioral reference while crediting mbredel's repository as the upstream project; do not imply source-code derivation.
 - Favor correctness, clarity, and maintainability over cleverness, abstraction, or line-count reduction.
 - Preserve the split between reusable layout (`template.typ`), configuration (`thesis.typ`), content, and assets.
 
-## Implementation
+### Implementation
 
 - Prefer small, direct, idiomatic Typst changes over helpers, state machines, or custom rendering.
 - Do not hand-roll functionality that Typst's standard library or a mature, actively maintained Typst package already provides well. Check Typst Universe before implementing document infrastructure such as glossaries, acronyms, theorem systems, citations, indexes, or advanced counters; use a pinned package version unless a documented project-specific requirement makes the package unsuitable.
@@ -23,7 +29,7 @@
 - Keep margin notes clear of chapter numerals and page edges.
 - Do not delete or broadly replace the project when refining it.
 
-## Validation
+### Validation
 
 - Use the pinned toolchain through `mise`; run `mise run check` after changes.
 - For substantial visual changes, render representative pages with `tools/render-pdf.swift` and review them through `tools/visual-review.swift` using a capable vision model. Do not inspect or interpret page images directly.
@@ -32,7 +38,7 @@
 - Verify labels across captions, references, contents, and float lists, not merely successful compilation.
 - Pay particular attention to clipped numerals, heading placement, text-block margins, page-number leakage, overlaps, stale headers, and appendix numbering.
 
-## Commits
+### Commits
 
 - Use Conventional Commit subjects in the form `type(scope): description`.
 - Scope reusable template changes by template area, using path-like scopes such as `template/glossary`; keep document-specific changes scoped separately.
